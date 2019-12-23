@@ -1,0 +1,9 @@
+# Ignore everything
+*
+
+# Except these files
+# !dist/**/*.js
+!lib/**/*.js
+!classes.js
+!subclasses.js
+!metadata.js

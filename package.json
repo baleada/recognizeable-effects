@@ -1,0 +1,67 @@
+{
+  "name": "@baleada/listenable-gestures",
+  "version": "0.0.0",
+  "description": "A collection of gesture recognizers that are compatible with Baleada Logic's Listenable class.",
+  "main": "lib/index.js",
+  "scripts": {
+    "prepare": "node scripts/prepare.js",
+    "test": "npm run prepare && ava"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://gitlab.com/baleada/listenable-gestures.git"
+  },
+  "keywords": [
+    "baleada",
+    "listenable gestures",
+    "clicks",
+    "double click",
+    "drag",
+    "dragdrop",
+    "pan",
+    "pinch",
+    "press",
+    "rotate",
+    "swipe",
+    "taps",
+    "double tap",
+    "recognizer"
+  ],
+  "author": {
+    "name": "Alex Vipond",
+    "email": "hello@alexvipond.dev",
+    "url": "https://alexvipond.dev"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://gitlab.com/baleada/listenable-gestures/issues"
+  },
+  "homepage": "https://baleada.netlify.com",
+  "devDependencies": {
+    "@babel/cli": "^7.7.4",
+    "@babel/core": "^7.7.4",
+    "@babel/plugin-proposal-class-properties": "^7.7.4",
+    "@babel/plugin-proposal-private-methods": "^7.7.4",
+    "@babel/plugin-transform-regenerator": "^7.7.4",
+    "@babel/preset-env": "^7.7.4",
+    "@babel/runtime-corejs3": "^7.7.4",
+    "@nuxtjs/eslint-config": "^1.1.2",
+    "ava": "^2.4.0",
+    "babel-eslint": "^10.0.3",
+    "core-js": "^3.4.5",
+    "eslint": "^6.7.2",
+    "eslint-config-standard": "^13.0.1",
+    "eslint-plugin-ava": "^7.1.0",
+    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-node": "^9.2.0",
+    "eslint-plugin-nuxt": "^0.4.3",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.1",
+    "fast-async": "^6.3.8",
+    "regenerator-runtime": "^0.13.3"
+  },
+  "sideEffects": false,
+  "dependencies": {
+    "@baleada/gesture": "0.0.0"
+  }
+}
