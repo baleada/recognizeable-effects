@@ -110,6 +110,15 @@ export default function clicks (options = {}) {
           get metadata () {
             return metadata
           },
+          get events () {
+            return gesture.events
+          },
+          get lastEvent () {
+            return gesture.lastEvent
+          },
+          get status () {
+            return gesture.status
+          },
           handle: event => gesture.handle(event),
         }
 

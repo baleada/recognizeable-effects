@@ -12,59 +12,50 @@ function recognized (event, object) {
   return object.handle(event) === 'recognized'
 }
 
-export default [
-  {
-    name: 'clicks',
+export default {
+  clicks: {
     factory: clicks,
     events: ['mousedown', 'mousemove', 'mouseout', 'mouseup'],
     recognized,
   },
-  {
-    name: 'drag',
+  drag: {
     factory: drag,
     events: ['mousedown', 'mousemove', 'mouseout', 'mouseup'],
     recognized,
   },
-  {
-    name: 'dragdrop',
+  dragdrop: {
     factory: dragdrop,
     events: ['mousedown', 'mousemove', 'mouseout', 'mouseup'],
     recognized,
   },
-  {
-    name: 'pan',
+  pan: {
     factory: pan,
     events: ['touchstart', 'touchmove', 'touchend', 'touchcancel'],
     recognized,
   },
-  {
-    name: 'pinch',
+  pinch: {
     factory: pinch,
     events: ['touchstart', 'touchmove', 'touchend', 'touchcancel'],
     recognized,
   },
-  {
-    name: 'press',
+  press: {
     factory: press,
     events: ['touchstart', 'touchmove', 'touchend', 'touchcancel'],
     recognized,
   },
-  {
-    name: 'rotate',
+  rotate: {
     factory: rotate,
     events: ['touchstart', 'touchmove', 'touchend', 'touchcancel'],
     recognized,
   },
-  {
-    name: 'swipe',
+  swipe: {
     factory: swipe,
     events: ['touchstart', 'touchmove', 'touchend', 'touchcancel'],
     recognized,
   },
-  {
-    name: 'taps',
+  taps: {
     factory: taps,
     events: ['touchstart', 'touchmove', 'touchend', 'touchcancel'],
     recognized,
   },
-]
+}
