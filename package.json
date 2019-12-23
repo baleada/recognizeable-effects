@@ -1,6 +1,6 @@
 {
   "name": "@baleada/listenable-gestures",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "A collection of gesture recognizers that are compatible with Baleada Logic's Listenable class.",
   "main": "lib/index.js",
   "scripts": {
@@ -62,6 +62,6 @@
   },
   "sideEffects": false,
   "dependencies": {
-    "@baleada/gesture": "0.0.0"
+    "@baleada/gesture": "^0.0.0"
   }
 }
