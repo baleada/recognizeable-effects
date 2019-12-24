@@ -1,5 +1,5 @@
 const { execSync } = require('child_process'),
-      empty = require('./emptyDir')
+      { empty } = require('@baleada/prepare')
 
 module.exports = function() {
   empty('lib')

@@ -103,7 +103,7 @@ export default function pan (options = {}) {
           handle: event => gesture.handle(event)
         }
 
-  gesture.reset()
+  gesture.reset() // TODO: pretty sure I can skip this
 
   return object
 }

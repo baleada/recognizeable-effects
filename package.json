@@ -1,6 +1,6 @@
 {
   "name": "@baleada/listenable-gestures",
-  "version": "0.0.4",
+  "version": "0.1.0",
   "description": "A collection of gesture recognizers that are compatible with Baleada Logic's Listenable class.",
   "main": "lib/index.js",
   "scripts": {
@@ -45,6 +45,7 @@
     "@babel/plugin-transform-regenerator": "^7.7.4",
     "@babel/preset-env": "^7.7.4",
     "@babel/runtime-corejs3": "^7.7.4",
+    "@baleada/prepare": "0.0.2",
     "@nuxtjs/eslint-config": "^1.1.2",
     "ava": "^2.4.0",
     "babel-eslint": "^10.0.3",
