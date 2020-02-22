@@ -30,7 +30,7 @@ export default function pan (options = {}) {
       x: event.touches.item(0).clientX,
       y: event.touches.item(0).clientY,
     }
-    emit(onStart, naiveDeepClone({ ...object, ...gesture }))
+    emit(onStart, naiveDeepClone({ ...recognizer, ...gesture }))
   }
   function touchmove (event, { toPolarCoordinates }) {
     const { x: xA, y: yA } = metadata.points.start, // TODO: less naive start point so that velocity is closer to reality
@@ -47,7 +47,7 @@ export default function pan (options = {}) {
 
     recognize()
 
-    emit(onMove, naiveDeepClone({ ...object, ...gesture }))
+    emit(onMove, naiveDeepClone({ ...recognizer, ...gesture }))
   }
   function recognize () {
     switch (true) {
@@ -63,11 +63,11 @@ export default function pan (options = {}) {
   }
   function touchcancel () {
     gesture.reset()
-    emit(onCancel, naiveDeepClone({ ...object, ...gesture }))
+    emit(onCancel, naiveDeepClone({ ...recognizer, ...gesture }))
   }
   function touchend () {
     gesture.reset()
-    emit(onEnd, naiveDeepClone({ ...object, ...gesture }))
+    emit(onEnd, naiveDeepClone({ ...recognizer, ...gesture }))
   }
   function onReset () {
     metadata = {
@@ -87,7 +87,7 @@ export default function pan (options = {}) {
     },
     recognizesConsecutive: true,
   }),
-        object = {
+        recognizer = {
           get metadata () {
             return metadata
           },
@@ -105,5 +105,5 @@ export default function pan (options = {}) {
 
   gesture.reset() // TODO: pretty sure I can skip this
 
-  return object
+  return recognizer
 }

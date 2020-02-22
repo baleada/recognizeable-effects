@@ -34,11 +34,11 @@ export default function dragdrop (options = {}) {
       x: event.clientX,
       y: event.clientY
     }
-    emit(onDown, naiveDeepClone({ ...object, ...gesture }))
+    emit(onDown, naiveDeepClone({ ...recognizer, ...gesture }))
   }
   function mousemove () {
     if (mouseIsDown) {
-      emit(onMove, naiveDeepClone({ ...object, ...gesture }))
+      emit(onMove, naiveDeepClone({ ...recognizer, ...gesture }))
     } else {
       gesture.reset()
     }
@@ -46,7 +46,7 @@ export default function dragdrop (options = {}) {
   function mouseout () {
     if (mouseIsDown) {
       gesture.reset()
-      emit(onOut, naiveDeepClone({ ...object, ...gesture }))
+      emit(onOut, naiveDeepClone({ ...recognizer, ...gesture }))
     }
   }
   function mouseup (event, { toPolarCoordinates }) {
@@ -65,7 +65,7 @@ export default function dragdrop (options = {}) {
 
     recognize()
 
-    emit(onUp, naiveDeepClone({ ...object, ...gesture }))
+    emit(onUp, naiveDeepClone({ ...recognizer, ...gesture }))
   }
   function recognize () {
     if (metadata.distance > minDistance && metadata.velocity > minVelocity) {
@@ -89,7 +89,7 @@ export default function dragdrop (options = {}) {
       mouseup,
     }
   }),
-        object = {
+        recognizer = {
           get metadata () {
             return metadata
           },
@@ -107,5 +107,5 @@ export default function dragdrop (options = {}) {
 
   gesture.reset()
 
-  return object
+  return recognizer
 }

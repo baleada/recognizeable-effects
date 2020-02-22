@@ -32,7 +32,7 @@ export default function drag (options = {}) {
       x: event.clientX,
       y: event.clientY,
     }
-    emit(onDown, naiveDeepClone({ ...object, ...gesture }))
+    emit(onDown, naiveDeepClone({ ...recognizer, ...gesture }))
   }
   function mousemove (event, { toPolarCoordinates }) {
     if (mouseIsDown) {
@@ -50,7 +50,7 @@ export default function drag (options = {}) {
 
       recognize()
 
-      emit(onMove, naiveDeepClone({ ...object, ...gesture }))
+      emit(onMove, naiveDeepClone({ ...recognizer, ...gesture }))
     } else {
       gesture.reset()
     }
@@ -63,13 +63,13 @@ export default function drag (options = {}) {
   function mouseout () {
     if (mouseIsDown) {
       gesture.reset()
-      emit(onOut, naiveDeepClone({ ...object, ...gesture }))
+      emit(onOut, naiveDeepClone({ ...recognizer, ...gesture }))
     }
   }
   function mouseup () {
     mouseIsDown = false
     gesture.reset()
-    emit(onUp, naiveDeepClone({ ...object, ...gesture }))
+    emit(onUp, naiveDeepClone({ ...recognizer, ...gesture }))
   }
   function onReset () {
     metadata = {
@@ -89,7 +89,7 @@ export default function drag (options = {}) {
     },
     recognizesConsecutive: true,
   }),
-        object = {
+        recognizer = {
           get metadata () {
             return metadata
           },
@@ -107,5 +107,5 @@ export default function drag (options = {}) {
 
   gesture.reset()
 
-  return object
+  return recognizer
 }

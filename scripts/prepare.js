@@ -3,7 +3,8 @@ const { generateIndex } = require('@baleada/prepare'),
 
 function prepare () {
   /* Index all */
-  generateIndex('src/factories', { importPath: 'lib/factories', outfile: 'factories' })
+  generateIndex('src/handler-getters', { importPath: 'lib/handler-getters', outfile: 'handler-getters' })
+  generateIndex('src/util')
 
   /* Transform files */
   babelify()

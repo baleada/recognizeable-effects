@@ -1,7 +1,3 @@
-import emit from './emit'
-import naiveDeepClone from './naiveDeepClone'
-
-export {
-  emit,
-  naiveDeepClone,
-}
+export { default as emit } from './emit.js'
+export { default as naiveDeepClone } from './naiveDeepClone.js'
+export { default as toEmitted } from './toEmitted.js'

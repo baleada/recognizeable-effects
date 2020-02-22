@@ -1,67 +1,21 @@
-import clicksFactory from './factories/clicks'
-import dragFactory from './factories/drag'
-import dragdropFactory from './factories/dragdrop'
-import panFactory from './factories/pan'
-import pinchFactory from './factories/pinch'
-import pressFactory from './factories/press'
-import rotateFactory from './factories/rotate'
-import swipeFactory from './factories/swipe'
-import tapsFactory from './factories/taps'
+import clicks from './handler-getters/clicks'
+// import drag from './handler-getters/drag'
+// import dragdrop from './handler-getters/dragdrop'
+// import pan from './handler-getters/pan'
+// import pinch from './handler-getters/pinch'
+// import press from './handler-getters/press'
+// import rotate from './handler-getters/rotate'
+// import swipe from './handler-getters/swipe'
+// import taps from './handler-getters/taps'
 
-function recognized (event, object) {
-  return object.handle(event) === 'recognized'
-}
-
-export const clicks = {
-  factory: clicksFactory,
-  events: ['mousedown', 'mousemove', 'mouseout', 'mouseup'],
-  recognized,
-}
-
-export const drag = {
-  factory: dragFactory,
-  events: ['mousedown', 'mousemove', 'mouseout', 'mouseup'],
-  recognized,
-}
-
-export const dragdrop = {
-  factory: dragdropFactory,
-  events: ['mousedown', 'mousemove', 'mouseout', 'mouseup'],
-  recognized,
-}
-
-export const pan = {
-  factory: panFactory,
-  events: ['touchstart', 'touchmove', 'touchend', 'touchcancel'],
-  recognized,
-}
-
-export const pinch = {
-  factory: pinchFactory,
-  events: ['touchstart', 'touchmove', 'touchend', 'touchcancel'],
-  recognized,
-}
-
-export const press = {
-  factory: pressFactory,
-  events: ['touchstart', 'touchmove', 'touchend', 'touchcancel'],
-  recognized,
-}
-
-export const rotate = {
-  factory: rotateFactory,
-  events: ['touchstart', 'touchmove', 'touchend', 'touchcancel'],
-  recognized,
-}
-
-export const swipe = {
-  factory: swipeFactory,
-  events: ['touchstart', 'touchmove', 'touchend', 'touchcancel'],
-  recognized,
-}
-
-export const taps = {
-  factory: tapsFactory,
-  events: ['touchstart', 'touchmove', 'touchend', 'touchcancel'],
-  recognized,
+export {
+  clicks,
+  // drag,
+  // dragdrop,
+  // pan,
+  // pinch,
+  // press,
+  // rotate,
+  // swipe,
+  // taps,
 }

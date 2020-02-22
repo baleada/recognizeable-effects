@@ -38,14 +38,14 @@ export default function taps (options = {}) {
       y: event.touches.item(0).clientY
     }
 
-    emit(onStart, naiveDeepClone({ ...object, ...gesture }))
+    emit(onStart, naiveDeepClone({ ...recognizer, ...gesture }))
   }
   function touchmove () {
-    emit(onMove, naiveDeepClone({ ...object, ...gesture }))
+    emit(onMove, naiveDeepClone({ ...recognizer, ...gesture }))
   }
   function touchcancel () {
     gesture.reset()
-    emit(onCancel, naiveDeepClone({ ...object, ...gesture }))
+    emit(onCancel, naiveDeepClone({ ...recognizer, ...gesture }))
   }
   function touchend (event, { toPolarCoordinates }) {
     if (isSingleTouch) {
@@ -68,7 +68,7 @@ export default function taps (options = {}) {
 
     recognize()
 
-    emit(onEnd, naiveDeepClone({ ...object, ...gesture }))
+    emit(onEnd, naiveDeepClone({ ...recognizer, ...gesture }))
   }
   function recognize () {
     switch (true) {
@@ -104,7 +104,7 @@ export default function taps (options = {}) {
       touchend,
     },
   }),
-        object = {
+        recognizer = {
           get metadata () {
             return metadata
           },
@@ -122,5 +122,5 @@ export default function taps (options = {}) {
 
   gesture.reset()
 
-  return object
+  return recognizer
 }
