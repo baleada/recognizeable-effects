@@ -1,5 +1,5 @@
 
-import { emit, toEmitted } from '../util'
+import { emit, toEmitted, naiveDeepClone } from '../util'
 
 /*
  * clicks is defined as a single mouse that:
@@ -31,11 +31,14 @@ export default function clicks (options) {
   function mousedown (event, handlerApi) {
     const { setMetadata } = handlerApi
     
-    setMetadata('mouseStatus', 'down')
-    setMetadata('lastClick.times.start', event.timeStamp)
-    setMetadata('lastClick.points.start', {
-      x: event.clientX,
-      y: event.clientY
+    setMetadata({ path: 'mouseStatus', value: 'down' })
+    setMetadata({ path: 'lastClick.times.start', value: event.timeStamp })
+    setMetadata({
+      path: 'lastClick.points.start',
+      value: {
+        x: event.clientX,
+        y: event.clientY
+      }
     })
 
     emit(onDown, toEmitted(handlerApi))
@@ -44,7 +47,7 @@ export default function clicks (options) {
   function mousemove (event, handlerApi) {
     const { getMetadata, denied } = handlerApi
 
-    if (getMetadata('mouseStatus') === 'down') {
+    if (getMetadata().mouseStatus === 'down') {
       emit(onMove, toEmitted(handlerApi))
     } else {
       denied()
@@ -54,7 +57,7 @@ export default function clicks (options) {
   function mouseout (event, handlerApi) {
     const { getMetadata, denied } = handlerApi
 
-    if (getMetadata('mouseStatus') === 'down') {
+    if (getMetadata().mouseStatus === 'down') {
       denied()
       emit(onOut, toEmitted(handlerApi))
     }
@@ -63,40 +66,44 @@ export default function clicks (options) {
   function mouseup (event, handlerApi) {
     const { getMetadata, toPolarCoordinates, setMetadata, pushMetadata } = handlerApi
 
-    setMetadata('mouseStatus', 'up')
+    setMetadata({ path: 'mouseStatus', value: 'up' })
 
-    const { x: xA, y: yA } = getMetadata('lastClick.points.start'),
+    const { x: xA, y: yA } = getMetadata().lastClick.points.start,
           { clientX: xB, clientY: yB } = event,
           { distance } = toPolarCoordinates({ xA, xB, yA, yB }),
           endPoint = { x: xB, y: yB },
           endTime = event.timeStamp
 
-    setMetadata('lastClick.points.end', endPoint)
-    setMetadata('lastClick.times.end', endTime)
-    setMetadata('lastClick.distance', distance)
+    setMetadata({ path: 'lastClick.points.end', value: endPoint })
+    setMetadata({ path: 'lastClick.times.end', value: endTime })
+    setMetadata({ path: 'lastClick.distance', value: distance })
 
-    const interval = getMetadata('clicks').length === 0
+    if (!Array.isArray(getMetadata().clicks)) {
+      setMetadata({ path: 'clicks', value: [] })
+    }
+    const interval = getMetadata().clicks.length === 0
       ? 0
-      : endTime - getMetadata(`clicks.${getMetadata('clicks').length - 1}.times.end`)
+      : endTime - getMetadata().clicks[getMetadata().clicks.length - 1].times.end
 
-    setMetadata('lastClick.interval', interval)
+    setMetadata({ path: 'lastClick.interval', value: interval })
 
-    const newClick = naiveDeepClone(getMetadata('lastClick'))
-    pushMetadata('clicks', newClick)
+    const newClick = naiveDeepClone(getMetadata().lastClick)
+    pushMetadata({ path: 'clicks', value: newClick })
 
     recognize(handlerApi)
 
     emit(onUp, toEmitted(handlerApi))
   }
-  function recognize ({ getMetadata, denied, recognized }) {
+  function recognize ({ getMetadata, denied, setMetadata, pushMetadata, recognized }) {
     switch (true) {
-    case getMetadata('lastClick.interval') > maxInterval || getMetadata('lastClick.distance') > maxDistance: // Reset after multiple touches and after clicks with intervals or movement distances that are too large
-      const lastClick = naiveDeepClone(getMetadata('lastClick'))
+    case getMetadata().lastClick.interval > maxInterval || getMetadata().lastClick.distance > maxDistance: // Reset after multiple touches and after clicks with intervals or movement distances that are too large
+      const lastClick = naiveDeepClone(getMetadata().lastClick)
       denied()
-      pushMetadata('clicks', lastClick)
+      setMetadata({ path: 'clicks', value: [] })
+      pushMetadata({ path: 'clicks', value: lastClick })
       break
     default:
-      if (getMetadata('clicks').length >= minClicks) {
+      if (getMetadata().clicks.length >= minClicks) {
         recognized()
       }
       break
