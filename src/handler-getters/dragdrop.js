@@ -1,4 +1,4 @@
-import { emit, toEmitted, naiveDeepClone } from '../util'
+import { emit, toEmitted, storeStartMetadata, storeMoveMetadata } from '../util'
 
 /*
  * dragdrop is defined as a single click that:
@@ -10,15 +10,15 @@ import { emit, toEmitted, naiveDeepClone } from '../util'
  */
 export default function dragdrop (options = {}) {
   options = {
-    minDistance: 10, // TODO: research appropriate/accessible minDistance
-    minVelocity: 0.5, // TODO: research appropriate/accessible minVelocity
+    minDistance: 0,
+    minVelocity: 0,
     ...options,
   }
 
   const {
     onDown,
     onMove,
-    onOut,
+    onLeave,
     onUp,
     minDistance,
     minVelocity,
@@ -28,15 +28,8 @@ export default function dragdrop (options = {}) {
     const { setMetadata } = handlerApi
 
     setMetadata({ path: 'mouseStatus', value: 'down' })
-    setMetadata({ path: 'times.start', value: event.timeStamp })
-    setMetadata({
-      path: 'points.start',
-      value: {
-        x: event.clientX,
-        y: event.clientY
-      }
-    })
-
+    storeStartMetadata(event, handlerApi, 'mouse')
+    
     emit(onDown, toEmitted(handlerApi))
   }
 
@@ -44,10 +37,12 @@ export default function dragdrop (options = {}) {
     const { getMetadata, denied } = handlerApi
 
     if (getMetadata().mouseStatus === 'down') {
-      emit(onMove, toEmitted(handlerApi))
+      storeMoveMetadata(event, handlerApi, 'mouse')
     } else {
       denied()
     }
+
+    emit(onMove, toEmitted(handlerApi))
   }
 
   function mouseleave (event, handlerApi) {
@@ -56,37 +51,27 @@ export default function dragdrop (options = {}) {
     if (getMetadata().mouseStatus === 'down') {
       denied()
       setMetadata({ path: 'mouseStatus', value: 'leave' })
-      emit(onOut, toEmitted(handlerApi))
     }
+
+    emit(onLeave, toEmitted(handlerApi))
   }
 
   function mouseup (event, handlerApi) {
-    const { setMetadata, getMetadata, toPolarCoordinates } = handlerApi
+    const { setMetadata } = handlerApi
 
     setMetadata({ path: 'mouseStatus', value: 'up' })
-
-    const { x: xA, y: yA } = getMetadata().points.start, // TODO: less naive start point so that velocity is closer to reality
-          { clientX: xB, clientY: yB } = event,
-          { distance, angle } = toPolarCoordinates({ xA, xB, yA, yB }),
-          endPoint = { x: xB, y: yB },
-          endTime = event.timeStamp
-
-    setMetadata({ path: 'points.end', value: endPoint })
-    setMetadata({ path: 'times.end', value: endTime })
-    setMetadata({ path: 'distance', value: distance })
-    setMetadata({ path: 'angle', value: angle })
-
-    const velocity = distance / (getMetadata().times.end - getMetadata().times.start)
-    setMetadata({ path: 'velocity', value: velocity })
+    storeMoveMetadata(event, handlerApi, 'mouse')
 
     recognize(handlerApi)
 
     emit(onUp, toEmitted(handlerApi))
   }
 
-  function recognize ({ getMetadata, recognized }) {
-    if (getMetadata().distance > minDistance && getMetadata().velocity > minVelocity) {
+  function recognize ({ getMetadata, recognized, denied }) {
+    if (getMetadata().distance.fromStart >= minDistance && getMetadata().velocity >= minVelocity) {
       recognized()
+    } else {
+      denied()
     }
   }
 

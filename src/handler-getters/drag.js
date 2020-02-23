@@ -1,4 +1,4 @@
-import { emit, toEmitted, naiveDeepClone } from '../util'
+import { emit, toEmitted, storeStartMetadata, storeMoveMetadata } from '../util'
 
 /*
  * drag is defined as a single click that:
@@ -9,14 +9,14 @@ import { emit, toEmitted, naiveDeepClone } from '../util'
 
 export default function drag (options = {}) {
   options = {
-    minDistance: 5, // TODO: research
+    minDistance: 0,
     ...options,
   }
 
   const {
     onDown,
     onMove,
-    onOut,
+    onLeave,
     onUp,
     minDistance,
   } = options
@@ -25,64 +25,26 @@ export default function drag (options = {}) {
     const { setMetadata } = handlerApi
 
     setMetadata({ path: 'mouseStatus', value: 'down' })
-    setMetadata({ path: 'times.start', value: event.timeStamp })
-    setMetadata({ path: 'times.end', value: event.timestamp })
-
-    const point = {
-      x: event.clientX,
-      y: event.clientY,
-    }
-
-    setMetadata({ path: 'points.start', value: point })
-    setMetadata({ path: 'points.end', value: point })
+    storeStartMetadata(event, handlerApi, 'mouse')
 
     emit(onDown, toEmitted(handlerApi))
   }
 
   function mousemove (event, handlerApi) {
-    const { getMetadata, toPolarCoordinates, setMetadata, denied } = handlerApi
+    const { getMetadata, denied } = handlerApi
 
     if (getMetadata().mouseStatus === 'down') {
-      const { x: previousX, y: previousY } = getMetadata().points.end,
-            { x: startX, y: startY } = getMetadata().points.start,
-            { clientX: newX, clientY: newY } = event,
-            { distance: distanceFromPrevious, angle: angleFromPrevious } = toPolarCoordinates({
-              xA: previousX,
-              xB: newX,
-              yA: previousY,
-              yB: newY,
-            }),
-            { distance: distanceFromStart, angle: angleFromStart } = toPolarCoordinates({
-              xA: startX,
-              xB: newX,
-              yA: startY,
-              yB: newY,
-            })
-
-      setMetadata({ path: 'distance.fromPrevious', value: distanceFromPrevious })
-      setMetadata({ path: 'angle.fromPrevious', value: angleFromPrevious })
-      setMetadata({ path: 'distance.fromStart', value: distanceFromStart })
-      setMetadata({ path: 'angle.fromStart', value: angleFromStart })
-      
-      const previousEndTime = getMetadata().times.end,
-            newEndTime = event.timeStamp,
-            newEndPoint = { x: newX, y: newY },
-            velocity = distanceFromPrevious / (newEndTime - previousEndTime)
-
-      setMetadata({ path: 'points.end', value: newEndPoint })
-      setMetadata({ path: 'times.end', value: newEndTime })
-      setMetadata({ path: 'velocity', value: velocity })
-
+      storeMoveMetadata(event, handlerApi, 'mouse')
       recognize(handlerApi)
-
-      emit(onMove, toEmitted(handlerApi))
     } else {
       denied()
     }
+
+    emit(onMove, toEmitted(handlerApi))
   }
 
   function recognize ({ getMetadata, recognized }) {
-    if (getMetadata().distance.fromStart > minDistance) {
+    if (getMetadata().distance.fromStart >= minDistance) {
       recognized()
     }
   }
@@ -93,8 +55,9 @@ export default function drag (options = {}) {
     if (getMetadata().mouseStatus === 'down') {
       denied()
       setMetadata({ path: 'mouseStatus', value: 'leave' })
-      emit(onOut, toEmitted(handlerApi))
     }
+
+    emit(onLeave, toEmitted(handlerApi))
   }
 
   function mouseup (event, handlerApi) {

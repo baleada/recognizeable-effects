@@ -1,5 +1,4 @@
-import gestureFactory from '@baleada/gesture'
-import { emit, naiveDeepClone } from '../util'
+import { emit, toEmitted, storeStartMetadata, storeMoveMetadata } from '../util'
 
 /*
  * pan is defined as a single touch that:
@@ -7,6 +6,7 @@ import { emit, naiveDeepClone } from '../util'
  * - travels a distance greater than 0px (or a minimum distance of your choice)
  * - does not cancel or end
  */
+
 export default function pan (options = {}) {
   options = {
     minDistance: 5, // TODO: research appropriate/accessible minDistance
@@ -21,89 +21,54 @@ export default function pan (options = {}) {
     minDistance
   } = options
 
-  let isSingleTouch, metadata
+  function touchstart (event, handlerApi) {
+    const { setMetadata } = handlerApi
+    
+    setMetadata({ path: 'touchTotal', value: event.touches.length })
+    storeStartMetadata(event, handlerApi, 'touch')
+    
+    emit(onStart, toEmitted(handlerApi))
+  }
 
-  function touchstart (event) {
-    isSingleTouch = event.touches.length === 1
-    metadata.times.start = event.timeStamp
-    metadata.points.start = {
-      x: event.touches.item(0).clientX,
-      y: event.touches.item(0).clientY,
+  function touchmove (event, handlerApi) {
+    const { getMetadata, denied } = handlerApi
+
+    if (getMetadata().touchTotal === 1) {
+      storeMoveMetadata(event, handlerApi, 'touch')
+      recognize(handlerApi)
+    } else {
+      denied()
     }
-    emit(onStart, naiveDeepClone({ ...recognizer, ...gesture }))
+    
+    emit(onMove, toEmitted(handlerApi))
   }
-  function touchmove (event, { toPolarCoordinates }) {
-    const { x: xA, y: yA } = metadata.points.start, // TODO: less naive start point so that velocity is closer to reality
-          { clientX: xB, clientY: yB } = event.touches.item(0),
-          { distance, angle } = toPolarCoordinates({ xA, xB, yA, yB }),
-          endPoint = { x: xB, y: yB },
-          endTime = event.timeStamp
 
-    metadata.points.end = endPoint
-    metadata.times.end = endTime
-    metadata.distance = distance
-    metadata.angle = angle
-    metadata.velocity = distance / (metadata.times.end - metadata.times.start)
-
-    recognize()
-
-    emit(onMove, naiveDeepClone({ ...recognizer, ...gesture }))
-  }
-  function recognize () {
-    switch (true) {
-    case !isSingleTouch: // Guard against multiple touches
-      gesture.reset()
-      break
-    default:
-      if (metadata.distance > minDistance) {
-        gesture.recognized()
-      }
-      break
+  function recognize ({ getMetadata, recognized }) {
+    if (getMetadata().distance.fromStart >= minDistance) {
+      recognized()
     }
   }
-  function touchcancel () {
-    gesture.reset()
-    emit(onCancel, naiveDeepClone({ ...recognizer, ...gesture }))
-  }
-  function touchend () {
-    gesture.reset()
-    emit(onEnd, naiveDeepClone({ ...recognizer, ...gesture }))
-  }
-  function onReset () {
-    metadata = {
-      points: {},
-      times: {},
-    }
-    isSingleTouch = true
+
+  function touchcancel (event, handlerApi) {
+    const { denied } = handlerApi
+
+    denied()
+
+    emit(onCancel, toEmitted(handlerApi))
   }
 
-  const gesture = gestureFactory({
-    onReset,
-    handlers: {
-      touchstart,
-      touchmove,
-      touchcancel,
-      touchend,
-    },
-    recognizesConsecutive: true,
-  }),
-        recognizer = {
-          get metadata () {
-            return metadata
-          },
-          get events () {
-            return gesture.events
-          },
-          get lastEvent () {
-            return gesture.lastEvent
-          },
-          get status () {
-            return gesture.status
-          },
-          handle: event => gesture.handle(event)
-        }
+  function touchend (event, handlerApi) {
+    const { denied } = handlerApi
 
-  gesture.reset() // TODO: pretty sure I can skip this
+    denied()
 
-  return recognizer
+    emit(onEnd, toEmitted(handlerApi))
+  }
+  
+  return {
+    touchstart,
+    touchmove,
+    touchcancel,
+    touchend,
+  }
 }

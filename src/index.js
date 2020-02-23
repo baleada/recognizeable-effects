@@ -1,7 +1,7 @@
 import clicks from './handler-getters/clicks'
 import drag from './handler-getters/drag'
 import dragdrop from './handler-getters/dragdrop'
-// import pan from './handler-getters/pan'
+import pan from './handler-getters/pan'
 // import pinch from './handler-getters/pinch'
 // import press from './handler-getters/press'
 // import rotate from './handler-getters/rotate'
@@ -12,7 +12,7 @@ export {
   clicks,
   drag,
   dragdrop,
-  // pan,
+  pan,
   // pinch,
   // press,
   // rotate,
