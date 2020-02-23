@@ -6,7 +6,7 @@ import pan from './handler-getters/pan'
 // import press from './handler-getters/press'
 // import rotate from './handler-getters/rotate'
 import swipe from './handler-getters/swipe'
-// import taps from './handler-getters/taps'
+import taps from './handler-getters/taps'
 
 export {
   clicks,
@@ -17,5 +17,5 @@ export {
   // press,
   // rotate,
   swipe,
-  // taps,
+  taps,
 }
