@@ -1,6 +1,6 @@
 import clicks from './handler-getters/clicks'
-// import drag from './handler-getters/drag'
-// import dragdrop from './handler-getters/dragdrop'
+import drag from './handler-getters/drag'
+import dragdrop from './handler-getters/dragdrop'
 // import pan from './handler-getters/pan'
 // import pinch from './handler-getters/pinch'
 // import press from './handler-getters/press'
@@ -10,8 +10,8 @@ import clicks from './handler-getters/clicks'
 
 export {
   clicks,
-  // drag,
-  // dragdrop,
+  drag,
+  dragdrop,
   // pan,
   // pinch,
   // press,

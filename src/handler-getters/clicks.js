@@ -1,4 +1,3 @@
-
 import { emit, toEmitted, naiveDeepClone } from '../util'
 
 /*
@@ -10,7 +9,7 @@ import { emit, toEmitted, naiveDeepClone } from '../util'
  * - repeats 2 times (or a minimum number of your choice), with each click ending less than or equal to 500ms (or a maximum interval of your choice) after the previous click ended
  */
 
-export default function clicks (options) {
+export default function clicks (options = {}) {
   options = {
     minClicks: 1,
     maxInterval: 500, // Via https://ux.stackexchange.com/questions/40364/what-is-the-expected-timeframe-of-a-double-click
@@ -54,11 +53,12 @@ export default function clicks (options) {
     }
   }
 
-  function mouseout (event, handlerApi) {
+  function mouseleave (event, handlerApi) {
     const { getMetadata, denied } = handlerApi
 
     if (getMetadata().mouseStatus === 'down') {
       denied()
+      setMetadata({ path: 'mouseStatus', value: 'leave' })
       emit(onOut, toEmitted(handlerApi))
     }
   }
@@ -113,7 +113,7 @@ export default function clicks (options) {
   return {
     mousedown,
     mousemove,
-    mouseout,
+    mouseleave,
     mouseup,
   }
 }

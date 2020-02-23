@@ -1,12 +1,11 @@
-import gestureFactory from '@baleada/gesture'
-import { emit, naiveDeepClone } from '../util'
+import { emit, toEmitted, naiveDeepClone } from '../util'
 
 /*
  * dragdrop is defined as a single click that:
  * - starts at a given point
  * - travels a distance greater than 0px (or a minimum distance of your choice)
  * - travels at a velocity of greater than 0px/ms (or a minimum velocity of your choice)
- * - does not mouseout
+ * - does not mouseleave
  * - ends
  */
 export default function dragdrop (options = {}) {
@@ -25,87 +24,76 @@ export default function dragdrop (options = {}) {
     minVelocity,
   } = options
 
-  let mouseIsDown, metadata
+  function mousedown (event, handlerApi) {
+    const { setMetadata } = handlerApi
 
-  function mousedown (event) {
-    mouseIsDown = true
-    metadata.times.start = event.timeStamp
-    metadata.points.start = {
-      x: event.clientX,
-      y: event.clientY
-    }
-    emit(onDown, naiveDeepClone({ ...recognizer, ...gesture }))
+    setMetadata({ path: 'mouseStatus', value: 'down' })
+    setMetadata({ path: 'times.start', value: event.timeStamp })
+    setMetadata({
+      path: 'points.start',
+      value: {
+        x: event.clientX,
+        y: event.clientY
+      }
+    })
+
+    emit(onDown, toEmitted(handlerApi))
   }
-  function mousemove () {
-    if (mouseIsDown) {
-      emit(onMove, naiveDeepClone({ ...recognizer, ...gesture }))
+
+  function mousemove (event, handlerApi) {
+    const { getMetadata, denied } = handlerApi
+
+    if (getMetadata().mouseStatus === 'down') {
+      emit(onMove, toEmitted(handlerApi))
     } else {
-      gesture.reset()
+      denied()
     }
   }
-  function mouseout () {
-    if (mouseIsDown) {
-      gesture.reset()
-      emit(onOut, naiveDeepClone({ ...recognizer, ...gesture }))
+
+  function mouseleave (event, handlerApi) {
+    const { getMetadata, denied } = handlerApi
+
+    if (getMetadata().mouseStatus === 'down') {
+      denied()
+      setMetadata({ path: 'mouseStatus', value: 'leave' })
+      emit(onOut, toEmitted(handlerApi))
     }
   }
-  function mouseup (event, { toPolarCoordinates }) {
-    mouseIsDown = false
-    const { x: xA, y: yA } = metadata.points.start, // TODO: less naive start point so that velocity is closer to reality
+
+  function mouseup (event, handlerApi) {
+    const { setMetadata, getMetadata, toPolarCoordinates } = handlerApi
+
+    setMetadata({ path: 'mouseStatus', value: 'up' })
+
+    const { x: xA, y: yA } = getMetadata().points.start, // TODO: less naive start point so that velocity is closer to reality
           { clientX: xB, clientY: yB } = event,
           { distance, angle } = toPolarCoordinates({ xA, xB, yA, yB }),
           endPoint = { x: xB, y: yB },
           endTime = event.timeStamp
 
-    metadata.points.end = endPoint
-    metadata.times.end = endTime
-    metadata.distance = distance
-    metadata.angle = angle
-    metadata.velocity = distance / (metadata.times.end - metadata.times.start)
+    setMetadata({ path: 'points.end', value: endPoint })
+    setMetadata({ path: 'times.end', value: endTime })
+    setMetadata({ path: 'distance', value: distance })
+    setMetadata({ path: 'angle', value: angle })
 
-    recognize()
+    const velocity = distance / (getMetadata().times.end - getMetadata().times.start)
+    setMetadata({ path: 'velocity', value: velocity })
 
-    emit(onUp, naiveDeepClone({ ...recognizer, ...gesture }))
-  }
-  function recognize () {
-    if (metadata.distance > minDistance && metadata.velocity > minVelocity) {
-      gesture.recognized()
-    }
-  }
-  function onReset () {
-    metadata = {
-      points: {},
-      times: {},
-    }
-    mouseIsDown = false
+    recognize(handlerApi)
+
+    emit(onUp, toEmitted(handlerApi))
   }
 
-  const gesture = gestureFactory({
-    onReset,
-    handlers: {
-      mousedown,
-      mousemove,
-      mouseout,
-      mouseup,
+  function recognize ({ getMetadata, recognized }) {
+    if (getMetadata().distance > minDistance && getMetadata().velocity > minVelocity) {
+      recognized()
     }
-  }),
-        recognizer = {
-          get metadata () {
-            return metadata
-          },
-          get events () {
-            return gesture.events
-          },
-          get lastEvent () {
-            return gesture.lastEvent
-          },
-          get status () {
-            return gesture.status
-          },
-          handle: event => gesture.handle(event)
-        }
+  }
 
-  gesture.reset()
-
-  return recognizer
+  return {
+    mousedown,
+    mousemove,
+    mouseleave,
+    mouseup,
+  }
 }
