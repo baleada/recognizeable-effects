@@ -5,7 +5,7 @@ import pan from './handler-getters/pan'
 // import pinch from './handler-getters/pinch'
 // import press from './handler-getters/press'
 // import rotate from './handler-getters/rotate'
-// import swipe from './handler-getters/swipe'
+import swipe from './handler-getters/swipe'
 // import taps from './handler-getters/taps'
 
 export {
@@ -16,6 +16,6 @@ export {
   // pinch,
   // press,
   // rotate,
-  // swipe,
+  swipe,
   // taps,
 }

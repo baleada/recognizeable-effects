@@ -1,5 +1,4 @@
-import gestureFactory from '@baleada/gesture'
-import { emit, naiveDeepClone } from '../util'
+import { emit, toEmitted, storeStartMetadata, storeMoveMetadata } from '../util'
 
 /*
  * swipe is defined as a single touch that:
@@ -11,8 +10,8 @@ import { emit, naiveDeepClone } from '../util'
  */
 export default function swipe (options = {}) {
   options = {
-    minDistance: 10, // TODO: research
-    minVelocity: 0.5, // TODO: research
+    minDistance: 0,
+    minVelocity: 0,
     ...options,
   }
 
@@ -25,89 +24,58 @@ export default function swipe (options = {}) {
     minVelocity,
   } = options
 
-  let isSingleTouch, metadata
+  function touchstart (event, handlerApi) {
+    const { setMetadata } = handlerApi
+    
+    setMetadata({ path: 'touchTotal', value: event.touches.length })
+    storeStartMetadata(event, handlerApi, 'touch')
+    
+    emit(onStart, toEmitted(handlerApi))
+  }
 
-  function touchstart (event) {
-    isSingleTouch = event.touches.length === 1
-    metadata.times.start = event.timeStamp
-    metadata.points.start = {
-      x: event.touches.item(0).clientX,
-      y: event.touches.item(0).clientY
+  function touchmove (event, handlerApi) {
+    const { getMetadata, denied } = handlerApi
+
+    if (getMetadata().touchTotal === 1) {
+      storeMoveMetadata(event, handlerApi, 'touch')
+    } else {
+      denied()
     }
-    emit(onStart, naiveDeepClone({ ...recognizer, ...gesture }))
+    
+    emit(onMove, toEmitted(handlerApi))
   }
-  function touchmove () {
-    emit(onMove, naiveDeepClone({ ...recognizer, ...gesture }))
-  }
-  function touchcancel () {
-    gesture.reset()
-    emit(onCancel, naiveDeepClone({ ...recognizer, ...gesture }))
-  }
-  function touchend (event, { toPolarCoordinates }) {
-    if (isSingleTouch) {
-      const { x: xA, y: yA } = metadata.points.start,
-            { clientX: xB, clientY: yB } = event.changedTouches.item(0),
-            { distance, angle } = toPolarCoordinates({ xA, xB, yA, yB }),
-            endPoint = { x: xB, y: yB },
-            endTime = event.timeStamp
 
-      metadata.points.end = endPoint
-      metadata.times.end = endTime
-      metadata.distance = distance
-      metadata.angle = angle
-      metadata.velocity = distance / (metadata.times.end - metadata.times.start)
-    }
+  function touchcancel (event, handlerApi) {
+    const { denied } = handlerApi
 
-    recognize()
+    denied()
 
-    emit(onEnd, naiveDeepClone({ ...recognizer, ...gesture }))
+    emit(onCancel, toEmitted(handlerApi))
   }
-  function recognize () {
-    switch (true) {
-    case !isSingleTouch: // Guard against multiple touches
-      gesture.reset()
-      break
-    default:
-      if (metadata.distance > minDistance && metadata.velocity > minVelocity) {
-        gesture.recognized()
-      }
-      break
+
+  function touchend (event, handlerApi) {
+    const { getMetadata, setMetadata } = handlerApi
+
+    setMetadata({ path: 'touchTotal', value: getMetadata().touchTotal - 1 })
+    storeMoveMetadata(event, handlerApi, 'touchend')
+
+    recognize(handlerApi)
+
+    emit(onEnd, toEmitted(handlerApi))
+  }
+
+  function recognize ({ getMetadata, recognized, denied }) {
+    if (getMetadata().distance.fromStart >= minDistance && getMetadata().velocity >= minVelocity) {
+      recognized()
+    } else {
+      denied()
     }
   }
-  function onReset () {
-    metadata = {
-      points: {},
-      times: {},
-    }
-    isSingleTouch = true
+
+  return {
+    touchstart,
+    touchmove,
+    touchcancel,
+    touchend,
   }
-
-  const gesture = gestureFactory({
-    onReset,
-    handlers: {
-      touchstart,
-      touchmove,
-      touchcancel,
-      touchend,
-    },
-  }),
-        recognizer = {
-          get metadata () {
-            return metadata
-          },
-          get events () {
-            return gesture.events
-          },
-          get lastEvent () {
-            return gesture.lastEvent
-          },
-          get status () {
-            return gesture.status
-          },
-          handle: event => gesture.handle(event)
-        }
-
-  gesture.reset()
-
-  return recognizer
 }

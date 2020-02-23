@@ -1,5 +1,4 @@
-import gestureFactory from '@baleada/gesture'
-import { emit, naiveDeepClone } from '../util'
+import { emit, toEmitted, naiveDeepClone, getGetPoint } from '../util''
 
 /*
  * taps is defined as a single touch that:
@@ -28,99 +27,94 @@ export default function taps (options = {}) {
     maxDistance,
   } = options
 
-  let isSingleTouch, metadata
+  function touchstart (event, handlerApi) {
+    const { setMetadata } = handlerApi
+    
+    setMetadata({ path: 'touchTotal', value: event.touches.length })
+    setMetadata({ path: 'lastTap.times.start', value: event.timeStamp })
 
-  function touchstart (event) {
-    isSingleTouch = event.touches.length === 1
-    metadata.lastTap.times.start = event.timeStamp
-    metadata.lastTap.points.start = {
-      x: event.touches.item(0).clientX,
-      y: event.touches.item(0).clientY
+    const getPoint = getGetPoint('touch')
+    setMetadata({ path: 'lastTap.points.start', value: getPoint(event) })
+
+    emit(onStart, toEmitted(handlerApi))
+  }
+
+  function touchmove (event, handlerApi) {
+    const { getMetadata, denied } = handlerApi
+
+    if (getMetadata().touchTotal === 1) {
+      denied()
     }
 
-    emit(onStart, naiveDeepClone({ ...recognizer, ...gesture }))
-  }
-  function touchmove () {
     emit(onMove, naiveDeepClone({ ...recognizer, ...gesture }))
   }
-  function touchcancel () {
-    gesture.reset()
-    emit(onCancel, naiveDeepClone({ ...recognizer, ...gesture }))
+
+  function touchcancel (event, handlerApi) {
+    const { getMetadata, denied } = handlerApi
+
+    if (getMetadata().touchTotal === 1) {
+      denied()
+      setMetadata({ path: 'touchTotal', value: getMetadata().touchTotal - 1 }) // TODO: is there a way to un-cancel a touch without triggering a touch start? If so, this touch total calc would be wrong.
+    }
+
+    emit(onCancel, toEmitted(handlerApi))
   }
-  function touchend (event, { toPolarCoordinates }) {
-    if (isSingleTouch) {
-      const { x: xA, y: yA } = metadata.lastTap.points.start,
+
+  function touchend (event, handlerApi) {
+    const { getMetadata, toPolarCoordinates, setMetadata, pushMetadata, denied } = handlerApi
+
+    setMetadata({ path: 'touchTotal', value: getMetadata().touchTotal - 1 })
+
+    if (getMetadata().touchTotal === 1) {
+      const { x: xA, y: yA } = getMetadata().lastTap.points.start,
             { clientX: xB, clientY: yB } = event.changedTouches.item(0),
             { distance } = toPolarCoordinates({ xA, xB, yA, yB }),
             endPoint = { x: xB, y: yB },
             endTime = event.timeStamp
 
-      metadata.lastTap.points.end = endPoint
-      metadata.lastTap.times.end = endTime
-      metadata.lastTap.distance = distance
-      metadata.lastTap.interval = metadata.taps.length === 0
+      setMetadata({ path: 'lastTap.points.end', value: endPoint })
+      setMetadata({ path: 'lastTap.times.end', value: endTime })
+      setMetadata({ path: 'lastTap.distance', value: distance })
+
+      if (!Array.isArray(getMetadata().taps)) {
+        setMetadata({ path: 'taps', value: [] })
+      }
+      const interval = getMetadata().taps.length === 0
         ? 0
-        : endTime - metadata.taps[metadata.taps.length - 1].times.end
+        : endTime - getMetadata().taps[getMetadata().taps.length - 1].times.end
+      setMetadata({ path: 'lastClick.interval', value: interval })
 
-      const newTap = naiveDeepClone(metadata.lastTap)
-      metadata.taps.push(newTap)
+      const newTap = naiveDeepClone(getMetadata().lastTap)
+      pushMetadata({ path: 'taps', value: newTap })
+
+      recognize(handlerApi)
+    } else {
+      denied()
     }
-
-    recognize()
 
     emit(onEnd, naiveDeepClone({ ...recognizer, ...gesture }))
   }
-  function recognize () {
+
+  function recognize ({ getMetadata, denied, recognized }) {
     switch (true) {
-    case !isSingleTouch || metadata.lastTap.interval > maxInterval || metadata.lastTap.distance > maxDistance: // Reset after multiple touoches and after taps with intervals or movement distances that are too large
-      const lastTap = naiveDeepClone(metadata.lastTap)
-      gesture.reset()
-      metadata.taps.push(lastTap)
+    case getMetadata().lastTap.interval > maxInterval || getMetadata().lastTap.distance > maxDistance: // Deny after multiple touches and after taps with intervals or movement distances that are too large
+      const lastTap = naiveDeepClone(getMetadata().lastTap)
+      denied()
+      setMetadata({ path: 'taps', value: [] })
+      pushMetadata({ path: 'taps', value: lastTap })
       break
     default:
-      if (metadata.taps.length >= minTaps) {
-        gesture.recognized()
+      if (getMetadata().taps.length >= minTaps) {
+        recognized()
       }
       break
     }
   }
-  function onReset () {
-    metadata = {
-      taps: [],
-      lastTap: {
-        points: {},
-        times: {},
-      },
-    }
-    isSingleTouch = true
+  
+  return {
+    touchstart,
+    touchmove,
+    touchcancel,
+    touchend,
   }
-
-  const gesture = gestureFactory({
-    onReset,
-    handlers: {
-      touchstart,
-      touchmove,
-      touchcancel,
-      touchend,
-    },
-  }),
-        recognizer = {
-          get metadata () {
-            return metadata
-          },
-          get events () {
-            return gesture.events
-          },
-          get lastEvent () {
-            return gesture.lastEvent
-          },
-          get status () {
-            return gesture.status
-          },
-          handle: event => gesture.handle(event)
-        }
-
-  gesture.reset()
-
-  return recognizer
 }

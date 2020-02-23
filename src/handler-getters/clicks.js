@@ -1,4 +1,4 @@
-import { emit, toEmitted, naiveDeepClone } from '../util'
+import { emit, toEmitted, naiveDeepClone, getGetPoint } from '../util'
 
 /*
  * clicks is defined as a single mouse that:
@@ -20,7 +20,7 @@ export default function clicks (options = {}) {
   const {
     onDown,
     onMove,
-    onOut,
+    onLeave,
     onUp,
     minClicks,
     maxInterval,
@@ -32,13 +32,9 @@ export default function clicks (options = {}) {
     
     setMetadata({ path: 'mouseStatus', value: 'down' })
     setMetadata({ path: 'lastClick.times.start', value: event.timeStamp })
-    setMetadata({
-      path: 'lastClick.points.start',
-      value: {
-        x: event.clientX,
-        y: event.clientY
-      }
-    })
+
+    const getPoint = getGetPoint('mouse')
+    setMetadata({ path: 'lastClick.points.start', value: getPoint(event) })
 
     emit(onDown, toEmitted(handlerApi))
   }
@@ -46,11 +42,11 @@ export default function clicks (options = {}) {
   function mousemove (event, handlerApi) {
     const { getMetadata, denied } = handlerApi
 
-    if (getMetadata().mouseStatus === 'down') {
-      emit(onMove, toEmitted(handlerApi))
-    } else {
+    if (getMetadata().mouseStatus !== 'down') {
       denied()
     }
+
+    emit(onMove, toEmitted(handlerApi))
   }
 
   function mouseleave (event, handlerApi) {
@@ -59,8 +55,9 @@ export default function clicks (options = {}) {
     if (getMetadata().mouseStatus === 'down') {
       denied()
       setMetadata({ path: 'mouseStatus', value: 'leave' })
-      emit(onOut, toEmitted(handlerApi))
     }
+
+    emit(onLeave, toEmitted(handlerApi))
   }
 
   function mouseup (event, handlerApi) {
@@ -84,7 +81,6 @@ export default function clicks (options = {}) {
     const interval = getMetadata().clicks.length === 0
       ? 0
       : endTime - getMetadata().clicks[getMetadata().clicks.length - 1].times.end
-
     setMetadata({ path: 'lastClick.interval', value: interval })
 
     const newClick = naiveDeepClone(getMetadata().lastClick)
@@ -96,7 +92,7 @@ export default function clicks (options = {}) {
   }
   function recognize ({ getMetadata, denied, setMetadata, pushMetadata, recognized }) {
     switch (true) {
-    case getMetadata().lastClick.interval > maxInterval || getMetadata().lastClick.distance > maxDistance: // Reset after multiple touches and after clicks with intervals or movement distances that are too large
+    case getMetadata().lastClick.interval > maxInterval || getMetadata().lastClick.distance > maxDistance: // Deny after multiple touches and after clicks with intervals or movement distances that are too large
       const lastClick = naiveDeepClone(getMetadata().lastClick)
       denied()
       setMetadata({ path: 'clicks', value: [] })

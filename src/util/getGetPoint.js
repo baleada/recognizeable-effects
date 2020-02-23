@@ -1,14 +1,3 @@
-export default function getGetPoint (type) {
-  switch (type) {
-  case 'mouse':
-    return getMousePoint
-    break
-  case 'touch':
-    return getTouchPoint
-    break
-  }
-}
-
 function getMousePoint (event) {
   return {
     x: event.clientX,
@@ -16,9 +5,26 @@ function getMousePoint (event) {
   }
 }
 
-function getTouchPoint (event) {
+function getTouchMovePoint (event) {
   return {
     x: event.touches.item(0).clientX,
     y: event.touches.item(0).clientY,
   }
+}
+
+function getTouchEndPoint (event) {
+  return {
+    x: event.changedTouches.item(0).clientX,
+    y: event.changedTouches.item(0).clientY,
+  }
+}
+
+const getGetPointDictionary = {
+  'mouse': getMousePoint,
+  'touch': getTouchMovePoint,
+  'touchend': getTouchEndPoint,
+}
+
+export default function getGetPoint (type) {
+  return getGetPointDictionary[type]
 }
