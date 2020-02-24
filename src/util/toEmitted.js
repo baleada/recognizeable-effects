@@ -1,5 +1,5 @@
 import naiveDeepClone from './naiveDeepClone'
 
-export default function toEmitted ({ getStatus, getLastEvent, getMetadata }) {
-  return naiveDeepClone({ status: getStatus(), lastEvent: getLastEvent(), metadata: getMetadata() })
+export default function toEmitted ({ getSequence, getStatus, getLastEvent, getMetadata }) {
+  return naiveDeepClone({ sequence: getSequence(), status: getStatus(), lastEvent: getLastEvent(), metadata: getMetadata() })
 }

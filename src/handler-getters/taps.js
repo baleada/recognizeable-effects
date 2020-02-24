@@ -1,4 +1,4 @@
-import { emit, toEmitted, naiveDeepClone, getGetPoint } from '../util''
+import { emit, toEmitted, naiveDeepClone, getGetPoint } from '../util'
 
 /*
  * taps is defined as a single touch that:
@@ -40,13 +40,7 @@ export default function taps (options = {}) {
   }
 
   function touchmove (event, handlerApi) {
-    const { getMetadata, denied } = handlerApi
-
-    if (getMetadata().touchTotal === 1) {
-      denied()
-    }
-
-    emit(onMove, naiveDeepClone({ ...recognizer, ...gesture }))
+    emit(onMove, toEmitted(handlerApi))
   }
 
   function touchcancel (event, handlerApi) {
@@ -65,7 +59,7 @@ export default function taps (options = {}) {
 
     setMetadata({ path: 'touchTotal', value: getMetadata().touchTotal - 1 })
 
-    if (getMetadata().touchTotal === 1) {
+    if (getMetadata().touchTotal === 0) {
       const { x: xA, y: yA } = getMetadata().lastTap.points.start,
             { clientX: xB, clientY: yB } = event.changedTouches.item(0),
             { distance } = toPolarCoordinates({ xA, xB, yA, yB }),
@@ -92,7 +86,7 @@ export default function taps (options = {}) {
       denied()
     }
 
-    emit(onEnd, naiveDeepClone({ ...recognizer, ...gesture }))
+    emit(onEnd, toEmitted(handlerApi))
   }
 
   function recognize ({ getMetadata, denied, recognized }) {
