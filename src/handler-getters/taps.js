@@ -27,8 +27,8 @@ export default function taps (options = {}) {
     maxDistance,
   } = options
 
-  function touchstart (event, handlerApi) {
-    const { setMetadata } = handlerApi
+  function touchstart (handlerApi) {
+    const { event, setMetadata } = handlerApi
     
     setMetadata({ path: 'touchTotal', value: event.touches.length })
     setMetadata({ path: 'lastTap.times.start', value: event.timeStamp })
@@ -39,11 +39,11 @@ export default function taps (options = {}) {
     emit(onStart, toEmitted(handlerApi))
   }
 
-  function touchmove (event, handlerApi) {
+  function touchmove (handlerApi) {
     emit(onMove, toEmitted(handlerApi))
   }
 
-  function touchcancel (event, handlerApi) {
+  function touchcancel (handlerApi) {
     const { getMetadata, denied } = handlerApi
 
     if (getMetadata().touchTotal === 1) {
@@ -54,8 +54,8 @@ export default function taps (options = {}) {
     emit(onCancel, toEmitted(handlerApi))
   }
 
-  function touchend (event, handlerApi) {
-    const { getMetadata, toPolarCoordinates, setMetadata, pushMetadata, denied } = handlerApi
+  function touchend (handlerApi) {
+    const { event, getMetadata, toPolarCoordinates, setMetadata, pushMetadata, denied } = handlerApi
 
     setMetadata({ path: 'touchTotal', value: getMetadata().touchTotal - 1 })
 

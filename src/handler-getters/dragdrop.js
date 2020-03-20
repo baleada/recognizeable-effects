@@ -24,8 +24,8 @@ export default function dragdrop (options = {}) {
     minVelocity,
   } = options
 
-  function mousedown (event, handlerApi) {
-    const { setMetadata } = handlerApi
+  function mousedown (handlerApi) {
+    const { event, setMetadata } = handlerApi
 
     setMetadata({ path: 'mouseStatus', value: 'down' })
     storeStartMetadata(event, handlerApi, 'mouse')
@@ -33,8 +33,8 @@ export default function dragdrop (options = {}) {
     emit(onDown, toEmitted(handlerApi))
   }
 
-  function mousemove (event, handlerApi) {
-    const { getMetadata, denied } = handlerApi
+  function mousemove (handlerApi) {
+    const { event, getMetadata, denied } = handlerApi
 
     if (getMetadata().mouseStatus === 'down') {
       storeMoveMetadata(event, handlerApi, 'mouse')
@@ -45,7 +45,7 @@ export default function dragdrop (options = {}) {
     emit(onMove, toEmitted(handlerApi))
   }
 
-  function mouseleave (event, handlerApi) {
+  function mouseleave (handlerApi) {
     const { getMetadata, denied } = handlerApi
 
     if (getMetadata().mouseStatus === 'down') {
@@ -56,8 +56,8 @@ export default function dragdrop (options = {}) {
     emit(onLeave, toEmitted(handlerApi))
   }
 
-  function mouseup (event, handlerApi) {
-    const { setMetadata } = handlerApi
+  function mouseup (handlerApi) {
+    const { event, setMetadata } = handlerApi
 
     setMetadata({ path: 'mouseStatus', value: 'up' })
     storeMoveMetadata(event, handlerApi, 'mouse')

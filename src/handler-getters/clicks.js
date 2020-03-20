@@ -27,8 +27,8 @@ export default function clicks (options = {}) {
     maxDistance,
   } = options
 
-  function mousedown (event, handlerApi) {
-    const { setMetadata } = handlerApi
+  function mousedown (handlerApi) {
+    const { event, setMetadata } = handlerApi
     
     setMetadata({ path: 'mouseStatus', value: 'down' })
     setMetadata({ path: 'lastClick.times.start', value: event.timeStamp })
@@ -39,7 +39,7 @@ export default function clicks (options = {}) {
     emit(onDown, toEmitted(handlerApi))
   }
 
-  function mousemove (event, handlerApi) {
+  function mousemove (handlerApi) {
     const { getMetadata, denied } = handlerApi
 
     if (getMetadata().mouseStatus !== 'down') {
@@ -49,7 +49,7 @@ export default function clicks (options = {}) {
     emit(onMove, toEmitted(handlerApi))
   }
 
-  function mouseleave (event, handlerApi) {
+  function mouseleave (handlerApi) {
     const { getMetadata, denied } = handlerApi
 
     if (getMetadata().mouseStatus === 'down') {
@@ -60,8 +60,8 @@ export default function clicks (options = {}) {
     emit(onLeave, toEmitted(handlerApi))
   }
 
-  function mouseup (event, handlerApi) {
-    const { getMetadata, toPolarCoordinates, setMetadata, pushMetadata } = handlerApi
+  function mouseup (handlerApi) {
+    const { event, getMetadata, toPolarCoordinates, setMetadata, pushMetadata } = handlerApi
 
     setMetadata({ path: 'mouseStatus', value: 'up' })
 

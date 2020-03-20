@@ -21,8 +21,8 @@ export default function pan (options = {}) {
     minDistance
   } = options
 
-  function touchstart (event, handlerApi) {
-    const { setMetadata } = handlerApi
+  function touchstart (handlerApi) {
+    const { event, setMetadata } = handlerApi
     
     setMetadata({ path: 'touchTotal', value: event.touches.length })
     storeStartMetadata(event, handlerApi, 'touch')
@@ -30,8 +30,8 @@ export default function pan (options = {}) {
     emit(onStart, toEmitted(handlerApi))
   }
 
-  function touchmove (event, handlerApi) {
-    const { getMetadata, denied } = handlerApi
+  function touchmove (handlerApi) {
+    const { event, getMetadata, denied } = handlerApi
 
     if (getMetadata().touchTotal === 1) {
       storeMoveMetadata(event, handlerApi, 'touch')
@@ -49,7 +49,7 @@ export default function pan (options = {}) {
     }
   }
 
-  function touchcancel (event, handlerApi) {
+  function touchcancel (handlerApi) {
     const { denied } = handlerApi
 
     denied()
@@ -57,7 +57,7 @@ export default function pan (options = {}) {
     emit(onCancel, toEmitted(handlerApi))
   }
 
-  function touchend (event, handlerApi) {
+  function touchend (handlerApi) {
     const { denied } = handlerApi
 
     denied()

@@ -24,8 +24,8 @@ export default function swipe (options = {}) {
     minVelocity,
   } = options
 
-  function touchstart (event, handlerApi) {
-    const { setMetadata } = handlerApi
+  function touchstart (handlerApi) {
+    const { event, setMetadata } = handlerApi
     
     setMetadata({ path: 'touchTotal', value: event.touches.length })
     storeStartMetadata(event, handlerApi, 'touch')
@@ -33,8 +33,8 @@ export default function swipe (options = {}) {
     emit(onStart, toEmitted(handlerApi))
   }
 
-  function touchmove (event, handlerApi) {
-    const { getMetadata, denied } = handlerApi
+  function touchmove (handlerApi) {
+    const { event, getMetadata, denied } = handlerApi
 
     if (getMetadata().touchTotal === 1) {
       storeMoveMetadata(event, handlerApi, 'touch')
@@ -45,7 +45,7 @@ export default function swipe (options = {}) {
     emit(onMove, toEmitted(handlerApi))
   }
 
-  function touchcancel (event, handlerApi) {
+  function touchcancel (handlerApi) {
     const { denied } = handlerApi
 
     denied()
@@ -53,8 +53,8 @@ export default function swipe (options = {}) {
     emit(onCancel, toEmitted(handlerApi))
   }
 
-  function touchend (event, handlerApi) {
-    const { getMetadata, setMetadata } = handlerApi
+  function touchend (handlerApi) {
+    const { event, getMetadata, setMetadata } = handlerApi
 
     setMetadata({ path: 'touchTotal', value: getMetadata().touchTotal - 1 })
     storeMoveMetadata(event, handlerApi, 'touchend')
