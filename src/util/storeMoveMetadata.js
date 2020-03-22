@@ -1,4 +1,5 @@
 import getGetPoint from './getGetPoint'
+import toDirection from './toDirection'
 
 export default function storeMoveMetadata (event, handlerApi, type) {
   const { getMetadata, toPolarCoordinates, setMetadata } = handlerApi,
@@ -22,8 +23,11 @@ export default function storeMoveMetadata (event, handlerApi, type) {
 
   setMetadata({ path: 'distance.fromPrevious', value: distanceFromPrevious })
   setMetadata({ path: 'angle.fromPrevious', value: angleFromPrevious })
+  setMetadata({ path: 'direction.fromPrevious', value: toDirection(angleFromPrevious.degrees) })
+  
   setMetadata({ path: 'distance.fromStart', value: distanceFromStart })
   setMetadata({ path: 'angle.fromStart', value: angleFromStart })
+  setMetadata({ path: 'direction.fromStart', value: toDirection(angleFromStart.degrees) })
   
   const previousEndTime = getMetadata().times.end,
         newEndTime = event.timeStamp,
