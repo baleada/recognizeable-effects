@@ -1,4 +1,4 @@
-import { emit, toEmitted, storeStartMetadata, storeMoveMetadata } from '../util'
+import { emit, toEmitted, storeStartMetadata, storeMoveMetadata, isDefined } from '../util'
 
 /*
  * swipe is defined as a single touch that:
@@ -8,21 +8,16 @@ import { emit, toEmitted, storeStartMetadata, storeMoveMetadata } from '../util'
  * - does not cancel
  * - ends
  */
-export default function swipe (options = {}) {
-  options = {
-    minDistance: 0,
-    minVelocity: 0,
-    ...options,
-  }
 
-  const {
-    onStart,
-    onMove,
-    onCancel,
-    onEnd,
-    minDistance,
-    minVelocity,
-  } = options
+const defaultOptions = {
+  minDistance: 0,
+  minVelocity: 0,
+}
+
+export default function swipe (options = {}) {
+  const { onStart, onMove, onCancel, onEnd } = options,
+        minDistance = isDefined(options.minDistance) ? options.minDistance : defaultOptions.minDistance,
+        minVelocity = isDefined(options.minVelocity) ? options.minVelocity : defaultOptions.minVelocity
 
   function touchstart (handlerApi) {
     const { event, setMetadata } = handlerApi

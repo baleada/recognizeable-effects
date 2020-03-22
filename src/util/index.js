@@ -1,5 +1,6 @@
 export { default as emit } from './emit.js'
 export { default as getGetPoint } from './getGetPoint.js'
+export { default as isDefined } from './isDefined.js'
 export { default as naiveDeepClone } from './naiveDeepClone.js'
 export { default as storeMoveMetadata } from './storeMoveMetadata.js'
 export { default as storeStartMetadata } from './storeStartMetadata.js'

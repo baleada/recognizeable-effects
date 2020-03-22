@@ -1,4 +1,4 @@
-import { emit, toEmitted, storeStartMetadata, storeMoveMetadata } from '../util'
+import { emit, toEmitted, storeStartMetadata, storeMoveMetadata, isDefined } from '../util'
 
 /*
  * dragdrop is defined as a single click that:
@@ -8,21 +8,16 @@ import { emit, toEmitted, storeStartMetadata, storeMoveMetadata } from '../util'
  * - does not mouseleave
  * - ends
  */
-export default function dragdrop (options = {}) {
-  options = {
-    minDistance: 0,
-    minVelocity: 0,
-    ...options,
-  }
 
-  const {
-    onDown,
-    onMove,
-    onLeave,
-    onUp,
-    minDistance,
-    minVelocity,
-  } = options
+const defaultOptions = {
+  minDistance: 0,
+  minVelocity: 0,
+}
+
+export default function dragdrop (options = {}) {
+  const { onDown, onMove, onLeave, onUp } = options,
+        minDistance = isDefined(options.minDistance) ? options.minDistance : defaultOptions.minDistance,
+        minVelocity = isDefined(options.minVelocity) ? options.minVelocity : defaultOptions.minVelocity
 
   function mousedown (handlerApi) {
     const { event, setMetadata } = handlerApi

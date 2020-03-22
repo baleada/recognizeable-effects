@@ -1,4 +1,4 @@
-import { emit, toEmitted, storeStartMetadata, storeMoveMetadata } from '../util'
+import { emit, toEmitted, storeStartMetadata, storeMoveMetadata, isDefined } from '../util'
 
 /*
  * drag is defined as a single click that:
@@ -7,19 +7,13 @@ import { emit, toEmitted, storeStartMetadata, storeMoveMetadata } from '../util'
  * - does not mouseleave or end
  */
 
-export default function drag (options = {}) {
-  options = {
-    minDistance: 0,
-    ...options,
-  }
+const defaultOptions = {
+  minDistance: 0,
+}
 
-  const {
-    onDown,
-    onMove,
-    onLeave,
-    onUp,
-    minDistance,
-  } = options
+export default function drag (options = {}) {
+  const { onDown, onMove, onLeave, onUp } = options,
+        minDistance = isDefined(options.minDistance) ? options.minDistance : defaultOptions.minDistance
 
   function mousedown (handlerApi) {
     const { event, setMetadata } = handlerApi

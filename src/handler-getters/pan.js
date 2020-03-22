@@ -1,4 +1,4 @@
-import { emit, toEmitted, storeStartMetadata, storeMoveMetadata } from '../util'
+import { emit, toEmitted, storeStartMetadata, storeMoveMetadata, isDefined } from '../util'
 
 /*
  * pan is defined as a single touch that:
@@ -7,19 +7,13 @@ import { emit, toEmitted, storeStartMetadata, storeMoveMetadata } from '../util'
  * - does not cancel or end
  */
 
-export default function pan (options = {}) {
-  options = {
-    minDistance: 5, // TODO: research appropriate/accessible minDistance
-    ...options,
-  }
+const defaultOptions = {
+  minDistance: 0, // TODO: research appropriate/accessible minDistance
+}
 
-  const {
-    onStart,
-    onMove,
-    onCancel,
-    onEnd,
-    minDistance
-  } = options
+export default function pan (options = {}) {
+  const { onStart, onMove, onCancel, onEnd } = options,
+        minDistance = isDefined(options.minDistance) ? options.minDistance : defaultOptions.minDistance
 
   function touchstart (handlerApi) {
     const { event, setMetadata } = handlerApi
