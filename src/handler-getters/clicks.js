@@ -4,9 +4,9 @@ import { emit, toEmitted, naiveDeepClone, getGetPoint, isDefined } from '../util
  * clicks is defined as a single mouse that:
  * - starts at a given point
  * - does not move beyond a maximum distance
- * - does not cancel
+ * - does not mouseleave
  * - ends
- * - repeats 2 times (or a minimum number of your choice), with each click ending less than or equal to 500ms (or a maximum interval of your choice) after the previous click ended
+ * - repeats 1 time (or a minimum number of your choice), with each click ending less than or equal to 500ms (or a maximum interval of your choice) after the previous click ended
  */
 
 const defaultOptions = {
