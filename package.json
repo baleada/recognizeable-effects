@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://gitlab.com/baleada/listenable-gestures.git"
+    "url": "git+https://github.com/baleada/listenable-gestures.git"
   },
   "keywords": [
     "baleada",
@@ -34,7 +34,7 @@
   },
   "license": "MIT",
   "bugs": {
-    "url": "https://gitlab.com/baleada/listenable-gestures/issues"
+    "url": "https://github.com/baleada/listenable-gestures/issues"
   },
   "homepage": "https://baleada.netlify.com",
   "devDependencies": {
