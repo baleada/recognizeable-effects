@@ -1,5 +1,4 @@
 import { configureable } from '@baleada/prepare'
-import { resolve } from 'path'
 
 export default [
   configureable('rollup')
