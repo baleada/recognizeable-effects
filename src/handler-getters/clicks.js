@@ -1,7 +1,7 @@
-import { emit, toEmitted, naiveDeepClone, getGetPoint, isDefined } from '../util'
+import { emit, toEmitted, naiveDeepClone, lookupToPoint, isDefined } from '../util'
 
 /*
- * clicks is defined as a single mouse that:
+ * clicks is defined as a single mousedown/mouseup combination that:
  * - starts at a given point
  * - does not move beyond a maximum distance
  * - does not mouseleave
@@ -16,10 +16,7 @@ const defaultOptions = {
 }
 
 export default function clicks (options = {}) {
-  const { onDown, onMove, onLeave, onUp } = options,
-        minClicks = isDefined(options.minClicks) ? options.minClicks : defaultOptions.minClicks,
-        maxInterval = isDefined(options.maxInterval) ? options.maxInterval : defaultOptions.maxInterval,
-        maxDistance = isDefined(options.maxDistance) ? options.maxDistance : defaultOptions.maxDistance
+  const { minClicks, maxInterval, maxDistance, onDown, onMove, onLeave, onUp } = { ...defaultOptions, ...options }
 
   function mousedown (handlerApi) {
     const { event, setMetadata } = handlerApi
@@ -27,7 +24,7 @@ export default function clicks (options = {}) {
     setMetadata({ path: 'mouseStatus', value: 'down' })
     setMetadata({ path: 'lastClick.times.start', value: event.timeStamp })
 
-    const getPoint = getGetPoint('mouse')
+    const getPoint = lookupToPoint('mouse')
     setMetadata({ path: 'lastClick.points.start', value: getPoint(event) })
 
     emit(onDown, toEmitted(handlerApi))

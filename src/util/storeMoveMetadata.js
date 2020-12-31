@@ -1,9 +1,9 @@
-import getGetPoint from './getGetPoint'
+import lookupToPoint from './lookupToPoint'
 import toDirection from './toDirection'
 
 export default function storeMoveMetadata (event, handlerApi, type) {
   const { getMetadata, toPolarCoordinates, setMetadata } = handlerApi,
-        getPoint = getGetPoint(type)
+        getPoint = lookupToPoint(type)
 
   const { x: previousX, y: previousY } = getMetadata().points.end,
         { x: startX, y: startY } = getMetadata().points.start,

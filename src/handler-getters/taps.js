@@ -1,4 +1,4 @@
-import { emit, toEmitted, naiveDeepClone, getGetPoint, isDefined } from '../util'
+import { emit, toEmitted, naiveDeepClone, lookupToPoint, isDefined } from '../util'
 
 /*
  * taps is defined as a single touch that:
@@ -27,7 +27,7 @@ export default function taps (options = {}) {
     setMetadata({ path: 'touchTotal', value: event.touches.length })
     setMetadata({ path: 'lastTap.times.start', value: event.timeStamp })
 
-    const getPoint = getGetPoint('touch')
+    const getPoint = lookupToPoint('touch')
     setMetadata({ path: 'lastTap.points.start', value: getPoint(event) })
 
     emit(onStart, toEmitted(handlerApi))

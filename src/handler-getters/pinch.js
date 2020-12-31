@@ -4,3 +4,7 @@
  * - each start at a given point, a given distance from each other
  * - change their starting distance by more than 0px (or a minimum distance of your choice)
  */
+
+export default function pinch () {
+ 
+}
