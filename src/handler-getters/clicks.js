@@ -33,7 +33,7 @@ export default function clicks (options = {}) {
   function mousemove (handlerApi) {
     const { getMetadata, denied } = handlerApi
 
-    if (getMetadata().mouseStatus !== 'down') {
+    if (getMetadata({ path: 'mouseStatus' }) !== 'down') {
       denied()
     }
 
@@ -41,9 +41,9 @@ export default function clicks (options = {}) {
   }
 
   function mouseleave (handlerApi) {
-    const { getMetadata, denied } = handlerApi
+    const { getMetadata, setMetadata, denied } = handlerApi
 
-    if (getMetadata().mouseStatus === 'down') {
+    if (getMetadata({ path: 'mouseStatus' }) === 'down') {
       denied()
       setMetadata({ path: 'mouseStatus', value: 'leave' })
     }
@@ -56,7 +56,7 @@ export default function clicks (options = {}) {
 
     setMetadata({ path: 'mouseStatus', value: 'up' })
 
-    const { x: xA, y: yA } = getMetadata().lastClick.points.start,
+    const { x: xA, y: yA } = getMetadata({ path: 'lastClick.points.start' }),
           { clientX: xB, clientY: yB } = event,
           { distance } = toPolarCoordinates({ xA, xB, yA, yB }),
           endPoint = { x: xB, y: yB },
@@ -66,15 +66,15 @@ export default function clicks (options = {}) {
     setMetadata({ path: 'lastClick.times.end', value: endTime })
     setMetadata({ path: 'lastClick.distance', value: distance })
 
-    if (!Array.isArray(getMetadata().clicks)) {
+    if (!Array.isArray(getMetadata({ path: 'clicks' }))) {
       setMetadata({ path: 'clicks', value: [] })
     }
-    const interval = getMetadata().clicks.length === 0
+    const interval = getMetadata({ path: 'clicks.length' }) === 0
       ? 0
-      : endTime - getMetadata().clicks[getMetadata().clicks.length - 1].times.end
+      : endTime - getMetadata({ path: 'clicks.last.times.end' })
     setMetadata({ path: 'lastClick.interval', value: interval })
 
-    const newClick = naiveDeepClone(getMetadata().lastClick)
+    const newClick = naiveDeepClone(getMetadata({ path: 'lastClick' }))
     pushMetadata({ path: 'clicks', value: newClick })
 
     recognize(handlerApi)
@@ -83,14 +83,14 @@ export default function clicks (options = {}) {
   }
   function recognize ({ getMetadata, denied, setMetadata, pushMetadata, recognized }) {
     switch (true) {
-    case getMetadata().lastClick.interval > maxInterval || getMetadata().lastClick.distance > maxDistance: // Deny after multiple touches and after clicks with intervals or movement distances that are too large
-      const lastClick = naiveDeepClone(getMetadata().lastClick)
+    case getMetadata({ path: 'lastClick.interval' }) > maxInterval || getMetadata({ path: 'lastClick.distance' }) > maxDistance: // Deny after multiple touches and after clicks with intervals or movement distances that are too large
+      const lastClick = naiveDeepClone(getMetadata({ path: 'lastClick' }))
       denied()
       setMetadata({ path: 'clicks', value: [] })
       pushMetadata({ path: 'clicks', value: lastClick })
       break
     default:
-      if (getMetadata().clicks.length >= minClicks) {
+      if (getMetadata({ path: 'clicks.length' }) >= minClicks) {
         recognized()
       }
       break

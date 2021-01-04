@@ -5,8 +5,8 @@ export default function storeMoveMetadata (event, handlerApi, type) {
   const { getMetadata, toPolarCoordinates, setMetadata } = handlerApi,
         getPoint = lookupToPoint(type)
 
-  const { x: previousX, y: previousY } = getMetadata().points.end,
-        { x: startX, y: startY } = getMetadata().points.start,
+  const { x: previousX, y: previousY } = getMetadata({ path: 'points.end' }),
+        { x: startX, y: startY } = getMetadata({ path: 'points.start' }),
         { x: newX, y: newY } = getPoint(event),
         { distance: distanceFromPrevious, angle: angleFromPrevious } = toPolarCoordinates({
           xA: previousX,
@@ -29,7 +29,7 @@ export default function storeMoveMetadata (event, handlerApi, type) {
   setMetadata({ path: 'angle.fromStart', value: angleFromStart })
   setMetadata({ path: 'direction.fromStart', value: toDirection(angleFromStart.degrees) })
   
-  const previousEndTime = getMetadata().times.end,
+  const previousEndTime = getMetadata({ path: 'times.end' }),
         newEndTime = event.timeStamp,
         newEndPoint = { x: newX, y: newY },
         velocity = distanceFromPrevious / (newEndTime - previousEndTime)

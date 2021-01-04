@@ -1,10 +1,10 @@
 import { emit, toEmitted, storeStartMetadata, storeMoveMetadata, isDefined } from '../util'
 
 /*
- * drag is defined as a single click that:
+ * drag is defined as a single drag that:
  * - starts at given point
  * - travels a distance greater than 0px (or a minimum distance of your choice)
- * - does not mouseleave or end
+ * - does not dragleave or end
  */
 
 const defaultOptions = {
@@ -12,60 +12,47 @@ const defaultOptions = {
 }
 
 export default function drag (options = {}) {
-  const { onDown, onMove, onLeave, onUp } = options,
+  const { onStart, onDrag, onLeave, onEnd } = options,
         minDistance = isDefined(options.minDistance) ? options.minDistance : defaultOptions.minDistance
 
-  function mousedown (handlerApi) {
-    const { event, setMetadata } = handlerApi
+  function dragstart (handlerApi) {
+    const { event } = handlerApi
 
-    setMetadata({ path: 'mouseStatus', value: 'down' })
     storeStartMetadata(event, handlerApi, 'mouse')
 
-    emit(onDown, toEmitted(handlerApi))
+    emit(onStart, toEmitted(handlerApi))
   }
 
-  function mousemove (handlerApi) {
-    const { event, getMetadata, denied } = handlerApi
+  function drag (handlerApi) {
+    const { event } = handlerApi
 
-    if (getMetadata().mouseStatus === 'down') {
-      storeMoveMetadata(event, handlerApi, 'mouse')
-      recognize(handlerApi)
-    } else {
-      denied()
-    }
+    storeMoveMetadata(event, handlerApi, 'mouse')
+    recognize(handlerApi)
 
-    emit(onMove, toEmitted(handlerApi))
+    emit(onDrag, toEmitted(handlerApi))
   }
 
   function recognize ({ getMetadata, recognized }) {
-    if (getMetadata().distance.fromStart >= minDistance) {
+    if (getMetadata({ path: 'distance.fromStart' }) >= minDistance) {
       recognized()
     }
   }
 
-  function mouseleave (handlerApi) {
-    const { getMetadata, denied, setMetadata } = handlerApi
-
-    if (getMetadata().mouseStatus === 'down') {
-      denied()
-      setMetadata({ path: 'mouseStatus', value: 'leave' })
-    }
-
+  function dragleave (handlerApi) {
     emit(onLeave, toEmitted(handlerApi))
   }
 
-  function mouseup (handlerApi) {
-    const { setMetadata, denied } = handlerApi
+  function dragend (handlerApi) {
+    const { denied } = handlerApi
 
-    setMetadata({ path: 'mouseStatus', value: 'up' })
     denied()
-    emit(onUp, toEmitted(handlerApi))
+    emit(onEnd, toEmitted(handlerApi))
   }
 
   return {
-    mousedown,
-    mousemove,
-    mouseleave,
-    mouseup,
+    dragstart,
+    drag,
+    dragleave,
+    dragend,
   }
 }

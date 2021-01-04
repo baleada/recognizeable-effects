@@ -1,11 +1,11 @@
 import { emit, toEmitted, storeStartMetadata, storeMoveMetadata, isDefined } from '../util'
 
 /*
- * swipe is defined as a single touch that:
+ * dragdrop is defined as a single click that:
  * - starts at a given point
  * - travels a distance greater than 0px (or a minimum distance of your choice)
  * - travels at a velocity of greater than 0px/ms (or a minimum velocity of your choice)
- * - does not cancel
+ * - does not mouseleave
  * - ends
  */
 
@@ -14,49 +14,52 @@ const defaultOptions = {
   minVelocity: 0,
 }
 
-export default function swipe (options = {}) {
-  const { onStart, onMove, onCancel, onEnd } = options,
+export default function dragdrop (options = {}) {
+  const { onDown, onMove, onLeave, onUp } = options,
         minDistance = isDefined(options.minDistance) ? options.minDistance : defaultOptions.minDistance,
         minVelocity = isDefined(options.minVelocity) ? options.minVelocity : defaultOptions.minVelocity
 
-  function touchstart (handlerApi) {
+  function mousedown (handlerApi) {
     const { event, setMetadata } = handlerApi
+
+    setMetadata({ path: 'mouseStatus', value: 'down' })
+    storeStartMetadata(event, handlerApi, 'mouse')
     
-    setMetadata({ path: 'touchTotal', value: event.touches.length })
-    storeStartMetadata(event, handlerApi, 'touch')
-    
-    emit(onStart, toEmitted(handlerApi))
+    emit(onDown, toEmitted(handlerApi))
   }
 
-  function touchmove (handlerApi) {
+  function mousemove (handlerApi) {
     const { event, getMetadata, denied } = handlerApi
 
-    if (getMetadata({ path: 'touchTotal' }) === 1) {
-      storeMoveMetadata(event, handlerApi, 'touch')
+    if (getMetadata({ path: 'mouseStatus' }) === 'down') {
+      storeMoveMetadata(event, handlerApi, 'mouse')
     } else {
       denied()
     }
-    
+
     emit(onMove, toEmitted(handlerApi))
   }
 
-  function touchcancel (handlerApi) {
-    const { denied } = handlerApi
+  function mouseleave (handlerApi) {
+    const { getMetadata, denied } = handlerApi
 
-    denied()
+    if (getMetadata({ path: 'mouseStatus' }) === 'down') {
+      denied()
+      setMetadata({ path: 'mouseStatus', value: 'leave' })
+    }
 
-    emit(onCancel, toEmitted(handlerApi))
+    emit(onLeave, toEmitted(handlerApi))
   }
 
-  function touchend (handlerApi) {
-    const { event, getMetadata, setMetadata } = handlerApi
+  function mouseup (handlerApi) {
+    const { event, setMetadata } = handlerApi
 
-    setMetadata({ path: 'touchTotal', value: getMetadata({ path: 'touchTotal' }) - 1 })
-    storeMoveMetadata(event, handlerApi, 'touchend')
+    setMetadata({ path: 'mouseStatus', value: 'up' })
+    storeMoveMetadata(event, handlerApi, 'mouse')
 
     recognize(handlerApi)
 
-    emit(onEnd, toEmitted(handlerApi))
+    emit(onUp, toEmitted(handlerApi))
   }
 
   function recognize ({ getMetadata, recognized, denied }) {
@@ -68,9 +71,9 @@ export default function swipe (options = {}) {
   }
 
   return {
-    touchstart,
-    touchmove,
-    touchcancel,
-    touchend,
+    mousedown,
+    mousemove,
+    mouseleave,
+    mouseup,
   }
 }

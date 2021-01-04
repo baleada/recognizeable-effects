@@ -27,7 +27,7 @@ export default function pan (options = {}) {
   function touchmove (handlerApi) {
     const { event, getMetadata, denied } = handlerApi
 
-    if (getMetadata().touchTotal === 1) {
+    if (getMetadata({ path: 'touchTotal' }) === 1) {
       storeMoveMetadata(event, handlerApi, 'touch')
       recognize(handlerApi)
     } else {
@@ -38,7 +38,7 @@ export default function pan (options = {}) {
   }
 
   function recognize ({ getMetadata, recognized }) {
-    if (getMetadata().distance.fromStart >= minDistance) {
+    if (getMetadata({ path: 'distance.fromStart' }) >= minDistance) {
       recognized()
     }
   }

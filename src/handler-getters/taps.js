@@ -38,11 +38,11 @@ export default function taps (options = {}) {
   }
 
   function touchcancel (handlerApi) {
-    const { getMetadata, denied } = handlerApi
+    const { getMetadata, setMetadata, denied } = handlerApi
 
-    if (getMetadata().touchTotal === 1) {
+    if (getMetadata({ path: 'touchTotal' }) === 1) {
       denied()
-      setMetadata({ path: 'touchTotal', value: getMetadata().touchTotal - 1 }) // TODO: is there a way to un-cancel a touch without triggering a touch start? If so, this touch total calc would be wrong.
+      setMetadata({ path: 'touchTotal', value: getMetadata({ path: 'touchTotal' }) - 1 }) // TODO: is there a way to un-cancel a touch without triggering a touch start? If so, this touch total calc would be wrong.
     }
 
     emit(onCancel, toEmitted(handlerApi))
@@ -51,10 +51,10 @@ export default function taps (options = {}) {
   function touchend (handlerApi) {
     const { event, getMetadata, toPolarCoordinates, setMetadata, pushMetadata, denied } = handlerApi
 
-    setMetadata({ path: 'touchTotal', value: getMetadata().touchTotal - 1 })
+    setMetadata({ path: 'touchTotal', value: getMetadata({ path: 'touchTotal' }) - 1 })
 
-    if (getMetadata().touchTotal === 0) {
-      const { x: xA, y: yA } = getMetadata().lastTap.points.start,
+    if (getMetadata({ path: 'touchTotal' }) === 0) {
+      const { x: xA, y: yA } = getMetadata({ path: 'lastTap.points.start' }),
             { clientX: xB, clientY: yB } = event.changedTouches.item(0),
             { distance } = toPolarCoordinates({ xA, xB, yA, yB }),
             endPoint = { x: xB, y: yB },
@@ -64,15 +64,15 @@ export default function taps (options = {}) {
       setMetadata({ path: 'lastTap.times.end', value: endTime })
       setMetadata({ path: 'lastTap.distance', value: distance })
 
-      if (!Array.isArray(getMetadata().taps)) {
+      if (!Array.isArray(getMetadata({ path: 'taps' }))) {
         setMetadata({ path: 'taps', value: [] })
       }
-      const interval = getMetadata().taps.length === 0
+      const interval = getMetadata({ path: 'taps.length' }) === 0
         ? 0
-        : endTime - getMetadata().taps[getMetadata().taps.length - 1].times.end
+        : endTime - getMetadata({ path: 'taps.last.times.end' })
       setMetadata({ path: 'lastClick.interval', value: interval })
 
-      const newTap = naiveDeepClone(getMetadata().lastTap)
+      const newTap = naiveDeepClone(getMetadata({ path: 'lastTap' }))
       pushMetadata({ path: 'taps', value: newTap })
 
       recognize(handlerApi)
@@ -83,16 +83,16 @@ export default function taps (options = {}) {
     emit(onEnd, toEmitted(handlerApi))
   }
 
-  function recognize ({ getMetadata, denied, recognized }) {
+  function recognize ({ getMetadata, setMetadata, pushMetadata, denied, recognized }) {
     switch (true) {
-    case getMetadata().lastTap.interval > maxInterval || getMetadata().lastTap.distance > maxDistance: // Deny after multiple touches and after taps with intervals or movement distances that are too large
-      const lastTap = naiveDeepClone(getMetadata().lastTap)
+    case getMetadata({ path: 'lastTap.interval' }) > maxInterval || getMetadata({ path: 'lastTap.distance' }) > maxDistance: // Deny after multiple touches and after taps with intervals or movement distances that are too large
+      const lastTap = naiveDeepClone(getMetadata({ path: 'lastTap' }))
       denied()
       setMetadata({ path: 'taps', value: [] })
       pushMetadata({ path: 'taps', value: lastTap })
       break
     default:
-      if (getMetadata().taps.length >= minTaps) {
+      if (getMetadata({ path: 'taps.length' }) >= minTaps) {
         recognized()
       }
       break
