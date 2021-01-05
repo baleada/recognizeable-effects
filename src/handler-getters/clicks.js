@@ -1,4 +1,4 @@
-import { emit, toEmitted, naiveDeepClone, lookupToPoint, isDefined } from '../util'
+import { toHookApi, naiveDeepClone, lookupToPoint } from '../util'
 
 /*
  * clicks is defined as a single mousedown/mouseup combination that:
@@ -32,11 +32,11 @@ export default function clicks (options = {}) {
     cache.mousemoveListener = event => mousemove({ ...handlerApi, event })
     target.addEventListener('mousemove', cache.mousemoveListener)
 
-    emit(onDown, toEmitted(handlerApi))
+    onDown?.(toHookApi(handlerApi))
   }
 
   function mousemove (handlerApi) {
-    emit(onMove, toEmitted(handlerApi))
+    onMove?.(toHookApi(handlerApi))
   }
 
   function mouseleave (handlerApi) {
@@ -48,7 +48,7 @@ export default function clicks (options = {}) {
       target.removeEventListener('mousemove', cache.mousemoveListener)
     }
 
-    emit(onLeave, toEmitted(handlerApi))
+    onLeave?.(toHookApi(handlerApi))
   }
 
   function mouseup (handlerApi) {
@@ -82,7 +82,7 @@ export default function clicks (options = {}) {
     const { target } = event
     target.removeEventListener('mousemove', cache.mousemoveListener)
 
-    emit(onUp, toEmitted(handlerApi))
+    onUp?.(toHookApi(handlerApi))
   }
   function recognize ({ getMetadata, denied, setMetadata, pushMetadata, recognized }) {
     switch (true) {

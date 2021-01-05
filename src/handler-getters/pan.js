@@ -1,4 +1,4 @@
-import { emit, toEmitted, storeStartMetadata, storeMoveMetadata, isDefined } from '../util'
+import { toHookApi, storeStartMetadata, storeMoveMetadata } from '../util'
 
 /*
  * pan is defined as a single touch that:
@@ -13,7 +13,7 @@ const defaultOptions = {
 
 export default function pan (options = {}) {
   const { onStart, onMove, onCancel, onEnd } = options,
-        minDistance = isDefined(options.minDistance) ? options.minDistance : defaultOptions.minDistance
+        minDistance = options.minDistance ?? defaultOptions.minDistance
 
   function touchstart (handlerApi) {
     const { event, setMetadata } = handlerApi
@@ -21,7 +21,7 @@ export default function pan (options = {}) {
     setMetadata({ path: 'touchTotal', value: event.touches.length })
     storeStartMetadata(event, handlerApi, 'touch')
     
-    emit(onStart, toEmitted(handlerApi))
+    onStart?.(toHookApi(handlerApi))
   }
 
   function touchmove (handlerApi) {
@@ -34,7 +34,7 @@ export default function pan (options = {}) {
       denied()
     }
     
-    emit(onMove, toEmitted(handlerApi))
+    onMove?.(toHookApi(handlerApi))
   }
 
   function recognize ({ getMetadata, recognized }) {
@@ -48,7 +48,7 @@ export default function pan (options = {}) {
 
     denied()
 
-    emit(onCancel, toEmitted(handlerApi))
+    onCancel?.(toHookApi(handlerApi))
   }
 
   function touchend (handlerApi) {
@@ -56,7 +56,7 @@ export default function pan (options = {}) {
 
     denied()
 
-    emit(onEnd, toEmitted(handlerApi))
+    onEnd?.(toHookApi(handlerApi))
   }
   
   return {

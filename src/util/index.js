@@ -1,8 +1,0 @@
-export { default as emit } from './emit.js'
-export { default as lookupToPoint } from './lookupToPoint.js'
-export { default as isDefined } from './isDefined.js'
-export { default as naiveDeepClone } from './naiveDeepClone.js'
-export { default as storeMoveMetadata } from './storeMoveMetadata.js'
-export { default as storeStartMetadata } from './storeStartMetadata.js'
-export { default as toDirection } from './toDirection.js'
-export { default as toEmitted } from './toEmitted.js'

@@ -1,4 +1,4 @@
-import { emit, toEmitted, naiveDeepClone, lookupToPoint, isDefined } from '../util'
+import { toHookApi, naiveDeepClone, lookupToPoint } from '../util'
 
 /*
  * taps is defined as a single touch that:
@@ -17,9 +17,9 @@ const defaultOptions = {
 
 export default function taps (options = {}) {
   const { onStart, onMove, onCancel, onEnd } = options,
-        minTaps = isDefined(options.minTaps) ? options.minTaps : defaultOptions.minTaps,
-        maxInterval = isDefined(options.maxInterval) ? options.maxInterval : defaultOptions.maxInterval,
-        maxDistance = isDefined(options.maxDistance) ? options.maxDistance : defaultOptions.maxDistance
+        minTaps = options.minTaps ?? defaultOptions.minTaps,
+        maxInterval = options.maxInterval ?? defaultOptions.maxInterval,
+        maxDistance = options.maxDistance ?? defaultOptions.maxDistance
 
   function touchstart (handlerApi) {
     const { event, setMetadata } = handlerApi
@@ -30,11 +30,11 @@ export default function taps (options = {}) {
     const getPoint = lookupToPoint('touch')
     setMetadata({ path: 'lastTap.points.start', value: getPoint(event) })
 
-    emit(onStart, toEmitted(handlerApi))
+    onStart?.(toHookApi(handlerApi))
   }
 
   function touchmove (handlerApi) {
-    emit(onMove, toEmitted(handlerApi))
+    onMove?.(toHookApi(handlerApi))
   }
 
   function touchcancel (handlerApi) {
@@ -45,7 +45,7 @@ export default function taps (options = {}) {
       setMetadata({ path: 'touchTotal', value: getMetadata({ path: 'touchTotal' }) - 1 }) // TODO: is there a way to un-cancel a touch without triggering a touch start? If so, this touch total calc would be wrong.
     }
 
-    emit(onCancel, toEmitted(handlerApi))
+    onCancel?.(toHookApi(handlerApi))
   }
 
   function touchend (handlerApi) {
@@ -80,7 +80,7 @@ export default function taps (options = {}) {
       denied()
     }
 
-    emit(onEnd, toEmitted(handlerApi))
+    onEnd?.(toHookApi(handlerApi))
   }
 
   function recognize ({ getMetadata, setMetadata, pushMetadata, denied, recognized }) {

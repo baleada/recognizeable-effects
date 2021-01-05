@@ -1,4 +1,4 @@
-import { emit, toEmitted, storeStartMetadata, storeMoveMetadata, isDefined } from '../util'
+import { toHookApi, storeStartMetadata, storeMoveMetadata } from '../util'
 
 /*
  * swipe is defined as a single touch that:
@@ -16,8 +16,8 @@ const defaultOptions = {
 
 export default function swipe (options = {}) {
   const { onStart, onMove, onCancel, onEnd } = options,
-        minDistance = isDefined(options.minDistance) ? options.minDistance : defaultOptions.minDistance,
-        minVelocity = isDefined(options.minVelocity) ? options.minVelocity : defaultOptions.minVelocity
+        minDistance = options.minDistance ?? defaultOptions.minDistance,
+        minVelocity = options.minVelocity ?? defaultOptions.minVelocity
 
   function touchstart (handlerApi) {
     const { event, setMetadata } = handlerApi
@@ -25,7 +25,7 @@ export default function swipe (options = {}) {
     setMetadata({ path: 'touchTotal', value: event.touches.length })
     storeStartMetadata(event, handlerApi, 'touch')
     
-    emit(onStart, toEmitted(handlerApi))
+    onStart?.(toHookApi(handlerApi))
   }
 
   function touchmove (handlerApi) {
@@ -37,7 +37,7 @@ export default function swipe (options = {}) {
       denied()
     }
     
-    emit(onMove, toEmitted(handlerApi))
+    onMove?.(toHookApi(handlerApi))
   }
 
   function touchcancel (handlerApi) {
@@ -45,7 +45,7 @@ export default function swipe (options = {}) {
 
     denied()
 
-    emit(onCancel, toEmitted(handlerApi))
+    onCancel?.(toHookApi(handlerApi))
   }
 
   function touchend (handlerApi) {
@@ -56,7 +56,7 @@ export default function swipe (options = {}) {
 
     recognize(handlerApi)
 
-    emit(onEnd, toEmitted(handlerApi))
+    onEnd?.(toHookApi(handlerApi))
   }
 
   function recognize ({ getMetadata, recognized, denied }) {

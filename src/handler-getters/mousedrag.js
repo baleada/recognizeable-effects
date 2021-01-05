@@ -1,4 +1,4 @@
-import { emit, toEmitted, storeStartMetadata, storeMoveMetadata, isDefined } from '../util'
+import { toHookApi, storeStartMetadata, storeMoveMetadata } from '../util'
 
 /*
  * mousedrag is defined as a single click that:
@@ -13,11 +13,11 @@ const defaultOptions = {
 
 export default function mousedrag (options = {}) {
   const { onDown, onMove, onLeave, onUp } = options,
-        minDistance = isDefined(options.minDistance) ? options.minDistance : defaultOptions.minDistance,
+        minDistance = options.minDistance ?? defaultOptions.minDistance,
         cache = {}
 
   function mousedown (handlerApi) {
-    const { event, setMetadata, getMetadata } = handlerApi
+    const { event, setMetadata } = handlerApi
 
     setMetadata({ path: 'mouseStatus', value: 'down' })
     storeStartMetadata(event, handlerApi, 'mouse')
@@ -26,7 +26,7 @@ export default function mousedrag (options = {}) {
     cache.mousemoveListener = event => mousemove({ ...handlerApi, event })
     target.addEventListener('mousemove', cache.mousemoveListener)
 
-    emit(onDown, toEmitted(handlerApi))
+    onDown?.(toHookApi(handlerApi))
   }
 
   function mousemove (handlerApi) {
@@ -35,7 +35,7 @@ export default function mousedrag (options = {}) {
     storeMoveMetadata(event, handlerApi, 'mouse')
     recognize(handlerApi)
 
-    emit(onMove, toEmitted(handlerApi))
+    onMove?.(toHookApi(handlerApi))
   }
 
   function recognize ({ event, getMetadata, recognized, listener }) {
@@ -54,7 +54,7 @@ export default function mousedrag (options = {}) {
       target.removeEventListener('mousemove', cache.mousemoveListener)
     }
 
-    emit(onLeave, toEmitted(handlerApi))
+    onLeave?.(toHookApi(handlerApi))
   }
 
   function mouseup (handlerApi) {
@@ -62,7 +62,7 @@ export default function mousedrag (options = {}) {
     denied()
     setMetadata({ path: 'mouseStatus', value: 'up' })
     target.removeEventListener('mousemove', cache.mousemoveListener)
-    emit(onUp, toEmitted(handlerApi))
+    onUp?.(toHookApi(handlerApi))
   }
 
   return {

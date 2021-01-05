@@ -1,7 +1,7 @@
-import { emit, toEmitted, storeStartMetadata, storeMoveMetadata, isDefined } from '../util'
+import { toHookApi, storeStartMetadata, storeMoveMetadata } from '../util'
 
 /*
- * dragdrop is defined as a single click that:
+ * mousedragdrop is defined as a single click that:
  * - starts at a given point
  * - travels a distance greater than 0px (or a minimum distance of your choice)
  * - travels at a velocity of greater than 0px/ms (or a minimum velocity of your choice)
@@ -16,8 +16,8 @@ const defaultOptions = {
 
 export default function dragdrop (options = {}) {
   const { onDown, onMove, onLeave, onUp } = options,
-        minDistance = isDefined(options.minDistance) ? options.minDistance : defaultOptions.minDistance,
-        minVelocity = isDefined(options.minVelocity) ? options.minVelocity : defaultOptions.minVelocity,
+        minDistance = options.minDistance ?? defaultOptions.minDistance,
+        minVelocity = options.minVelocity ?? defaultOptions.minVelocity,
         cache = {}
 
   function mousedown (handlerApi) {
@@ -30,7 +30,7 @@ export default function dragdrop (options = {}) {
     cache.mousemoveListener = event => mousemove({ ...handlerApi, event })
     target.addEventListener('mousemove', cache.mousemoveListener)
     
-    emit(onDown, toEmitted(handlerApi))
+    onDown?.(toHookApi(handlerApi))
   }
 
   function mousemove (handlerApi) {
@@ -38,7 +38,7 @@ export default function dragdrop (options = {}) {
 
     storeMoveMetadata(event, handlerApi, 'mouse')
 
-    emit(onMove, toEmitted(handlerApi))
+    onMove?.(toHookApi(handlerApi))
   }
 
   function mouseleave (handlerApi) {
@@ -50,7 +50,7 @@ export default function dragdrop (options = {}) {
       target.removeEventListener('mousemove', cache.mousemoveListener)
     }
 
-    emit(onLeave, toEmitted(handlerApi))
+    onLeave?.(toHookApi(handlerApi))
   }
 
   function mouseup (handlerApi) {
@@ -63,7 +63,7 @@ export default function dragdrop (options = {}) {
 
     target.removeEventListener('mousemove', cache.mousemoveListener)
 
-    emit(onUp, toEmitted(handlerApi))
+    onUp?.(toHookApi(handlerApi))
   }
 
   function recognize ({ getMetadata, recognized, denied }) {
