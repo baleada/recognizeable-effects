@@ -17,47 +17,51 @@ const defaultOptions = {
 export default function dragdrop (options = {}) {
   const { onDown, onMove, onLeave, onUp } = options,
         minDistance = isDefined(options.minDistance) ? options.minDistance : defaultOptions.minDistance,
-        minVelocity = isDefined(options.minVelocity) ? options.minVelocity : defaultOptions.minVelocity
+        minVelocity = isDefined(options.minVelocity) ? options.minVelocity : defaultOptions.minVelocity,
+        cache = {}
 
   function mousedown (handlerApi) {
     const { event, setMetadata } = handlerApi
 
     setMetadata({ path: 'mouseStatus', value: 'down' })
     storeStartMetadata(event, handlerApi, 'mouse')
+
+    const { target } = event
+    cache.mousemoveListener = event => mousemove({ ...handlerApi, event })
+    target.addEventListener('mousemove', cache.mousemoveListener)
     
     emit(onDown, toEmitted(handlerApi))
   }
 
   function mousemove (handlerApi) {
-    const { event, getMetadata, denied } = handlerApi
+    const { event } = handlerApi
 
-    if (getMetadata({ path: 'mouseStatus' }) === 'down') {
-      storeMoveMetadata(event, handlerApi, 'mouse')
-    } else {
-      denied()
-    }
+    storeMoveMetadata(event, handlerApi, 'mouse')
 
     emit(onMove, toEmitted(handlerApi))
   }
 
   function mouseleave (handlerApi) {
-    const { getMetadata, denied } = handlerApi
+    const { getMetadata, setMetadata, denied, event: { target } } = handlerApi
 
     if (getMetadata({ path: 'mouseStatus' }) === 'down') {
       denied()
       setMetadata({ path: 'mouseStatus', value: 'leave' })
+      target.removeEventListener('mousemove', cache.mousemoveListener)
     }
 
     emit(onLeave, toEmitted(handlerApi))
   }
 
   function mouseup (handlerApi) {
-    const { event, setMetadata } = handlerApi
+    const { event, setMetadata, event: { target } } = handlerApi
 
     setMetadata({ path: 'mouseStatus', value: 'up' })
     storeMoveMetadata(event, handlerApi, 'mouse')
 
     recognize(handlerApi)
+
+    target.removeEventListener('mousemove', cache.mousemoveListener)
 
     emit(onUp, toEmitted(handlerApi))
   }
@@ -72,7 +76,7 @@ export default function dragdrop (options = {}) {
 
   return {
     mousedown,
-    mousemove,
+    // mousemove,
     mouseleave,
     mouseup,
   }

@@ -16,7 +16,8 @@ const defaultOptions = {
 }
 
 export default function clicks (options = {}) {
-  const { minClicks, maxInterval, maxDistance, onDown, onMove, onLeave, onUp } = { ...defaultOptions, ...options }
+  const { minClicks, maxInterval, maxDistance, onDown, onMove, onLeave, onUp } = { ...defaultOptions, ...options },
+        cache = {}
 
   function mousedown (handlerApi) {
     const { event, setMetadata } = handlerApi
@@ -27,25 +28,24 @@ export default function clicks (options = {}) {
     const getPoint = lookupToPoint('mouse')
     setMetadata({ path: 'lastClick.points.start', value: getPoint(event) })
 
+    const { target } = event
+    cache.mousemoveListener = event => mousemove({ ...handlerApi, event })
+    target.addEventListener('mousemove', cache.mousemoveListener)
+
     emit(onDown, toEmitted(handlerApi))
   }
 
   function mousemove (handlerApi) {
-    const { getMetadata, denied } = handlerApi
-
-    if (getMetadata({ path: 'mouseStatus' }) !== 'down') {
-      denied()
-    }
-
     emit(onMove, toEmitted(handlerApi))
   }
 
   function mouseleave (handlerApi) {
-    const { getMetadata, setMetadata, denied } = handlerApi
+    const { getMetadata, setMetadata, denied, event: { target } } = handlerApi
 
     if (getMetadata({ path: 'mouseStatus' }) === 'down') {
       denied()
       setMetadata({ path: 'mouseStatus', value: 'leave' })
+      target.removeEventListener('mousemove', cache.mousemoveListener)
     }
 
     emit(onLeave, toEmitted(handlerApi))
@@ -79,6 +79,9 @@ export default function clicks (options = {}) {
 
     recognize(handlerApi)
 
+    const { target } = event
+    target.removeEventListener('mousemove', cache.mousemoveListener)
+
     emit(onUp, toEmitted(handlerApi))
   }
   function recognize ({ getMetadata, denied, setMetadata, pushMetadata, recognized }) {
@@ -99,7 +102,7 @@ export default function clicks (options = {}) {
 
   return {
     mousedown,
-    mousemove,
+    // mousemove,
     mouseleave,
     mouseup,
   }

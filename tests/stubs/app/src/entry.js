@@ -5,9 +5,12 @@ window.recognizeableHandlers = recognizeableHandlers
 window.Recognizeable = Recognizeable
 window.Listenable = Listenable
 
-
 const instance = new window.Listenable(
   'recognizeable', 
   { recognizeable: { handlers: window.recognizeableHandlers.mousedrag() } }
 )
-instance.listen(() => window.TEST_RESULT = instance.recognizeable.status)
+
+window.TEST = { instance }
+instance.listen(() => {
+  console.log(instance.recognizeable.status)
+})

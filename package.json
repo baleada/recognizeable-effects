@@ -44,7 +44,7 @@
   },
   "homepage": "https://baleada.netlify.com",
   "devDependencies": {
-    "@baleada/logic": "^0.16.5",
+    "@baleada/logic": "^0.16.12",
     "@baleada/prepare": "^0.4.31",
     "rollup": "^2.35.1",
     "uvu": "^0.5.1",

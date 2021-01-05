@@ -11,38 +11,37 @@ const defaultOptions = {
   minDistance: 0,
 }
 
-export default function drag (options = {}) {
+export default function mousedrag (options = {}) {
   const { onDown, onMove, onLeave, onUp } = options,
-        minDistance = isDefined(options.minDistance) ? options.minDistance : defaultOptions.minDistance
+        minDistance = isDefined(options.minDistance) ? options.minDistance : defaultOptions.minDistance,
+        cache = {}
 
   function mousedown (handlerApi) {
-    const { event, setMetadata } = handlerApi
+    const { event, setMetadata, getMetadata } = handlerApi
 
     setMetadata({ path: 'mouseStatus', value: 'down' })
     storeStartMetadata(event, handlerApi, 'mouse')
 
     const { target } = event
-    target.addEventListener(mousemove)
+    cache.mousemoveListener = event => mousemove({ ...handlerApi, event })
+    target.addEventListener('mousemove', cache.mousemoveListener)
 
     emit(onDown, toEmitted(handlerApi))
   }
 
   function mousemove (handlerApi) {
-    const { event, getMetadata, denied } = handlerApi
+    const { event } = handlerApi
 
-    if (getMetadata({ path: 'mouseStatus' }) === 'down') {
-      storeMoveMetadata(event, handlerApi, 'mouse')
-      recognize(handlerApi)
-    } else {
-      denied()
-    }
+    storeMoveMetadata(event, handlerApi, 'mouse')
+    recognize(handlerApi)
 
     emit(onMove, toEmitted(handlerApi))
   }
 
-  function recognize ({ getMetadata, recognized }) {
+  function recognize ({ event, getMetadata, recognized, listener }) {
     if (getMetadata({ path: 'distance.fromStart' }) >= minDistance) {
       recognized()
+      listener(event)
     }
   }
 
@@ -52,7 +51,7 @@ export default function drag (options = {}) {
     if (getMetadata({ path: 'mouseStatus' }) === 'down') {
       denied()
       setMetadata({ path: 'mouseStatus', value: 'leave' })
-      target.removeEventListener(mousemove)
+      target.removeEventListener('mousemove', cache.mousemoveListener)
     }
 
     emit(onLeave, toEmitted(handlerApi))
@@ -60,10 +59,9 @@ export default function drag (options = {}) {
 
   function mouseup (handlerApi) {
     const { setMetadata, denied, event: { target } } = handlerApi
-
     denied()
     setMetadata({ path: 'mouseStatus', value: 'up' })
-    target.removeEventListener(mousemove)
+    target.removeEventListener('mousemove', cache.mousemoveListener)
     emit(onUp, toEmitted(handlerApi))
   }
 
