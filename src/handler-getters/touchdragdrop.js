@@ -1,19 +1,23 @@
 import { toHookApi, storeStartMetadata, storeMoveMetadata } from '../util'
 
 /*
- * pan is defined as a single touch that:
- * - starts at given point
+ * touchdragdrop is defined as a single touch that:
+ * - starts at a given point
  * - travels a distance greater than 0px (or a minimum distance of your choice)
- * - does not cancel or end
+ * - travels at a velocity of greater than 0px/ms (or a minimum velocity of your choice)
+ * - does not cancel
+ * - ends
  */
 
 const defaultOptions = {
-  minDistance: 0, // TODO: research appropriate/accessible minDistance
+  minDistance: 0,
+  minVelocity: 0,
 }
 
-export default function pan (options = {}) {
+export default function touchdragdrop (options = {}) {
   const { onStart, onMove, onCancel, onEnd } = options,
-        minDistance = options.minDistance ?? defaultOptions.minDistance
+        minDistance = options.minDistance ?? defaultOptions.minDistance,
+        minVelocity = options.minVelocity ?? defaultOptions.minVelocity
 
   function touchstart (handlerApi) {
     const { event, setMetadata } = handlerApi
@@ -29,18 +33,11 @@ export default function pan (options = {}) {
 
     if (getMetadata({ path: 'touchTotal' }) === 1) {
       storeMoveMetadata(event, handlerApi, 'touch')
-      recognize(handlerApi)
     } else {
       denied()
     }
     
     onMove?.(toHookApi(handlerApi))
-  }
-
-  function recognize ({ getMetadata, recognized }) {
-    if (getMetadata({ path: 'distance.fromStart' }) >= minDistance) {
-      recognized()
-    }
   }
 
   function touchcancel (handlerApi) {
@@ -52,13 +49,24 @@ export default function pan (options = {}) {
   }
 
   function touchend (handlerApi) {
-    const { denied } = handlerApi
+    const { event, getMetadata, setMetadata } = handlerApi
 
-    denied()
+    setMetadata({ path: 'touchTotal', value: getMetadata({ path: 'touchTotal' }) - 1 })
+    storeMoveMetadata(event, handlerApi, 'touchend')
+
+    recognize(handlerApi)
 
     onEnd?.(toHookApi(handlerApi))
   }
-  
+
+  function recognize ({ getMetadata, recognized, denied }) {
+    if (getMetadata({ path: 'distance.fromStart' }) >= minDistance && getMetadata({ path: 'velocity' }) >= minVelocity) {
+      recognized()
+    } else {
+      denied()
+    }
+  }
+
   return {
     touchstart,
     touchmove,

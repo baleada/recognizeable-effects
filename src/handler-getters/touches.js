@@ -1,7 +1,7 @@
 import { toHookApi, naiveDeepClone, lookupToPoint } from '../util'
 
 /*
- * taps is defined as a single touch that:
+ * touches is defined as a single touch that:
  * - starts at a given point
  * - does not move beyond a maximum distance
  * - does not cancel
@@ -15,7 +15,7 @@ const defaultOptions = {
   maxDistance: 5, // TODO: research appropriate/accessible minDistance
 }
 
-export default function taps (options = {}) {
+export default function touches (options = {}) {
   const { onStart, onMove, onCancel, onEnd } = options,
         minTaps = options.minTaps ?? defaultOptions.minTaps,
         maxInterval = options.maxInterval ?? defaultOptions.maxInterval,
