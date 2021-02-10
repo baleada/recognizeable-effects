@@ -21,11 +21,15 @@ export default function storeMoveMetadata (event, handlerApi, type) {
           yB: newY,
         })
 
-  setMetadata({ path: 'distance.fromPrevious', value: distanceFromPrevious })
+  setMetadata({ path: 'distance.straight.fromPrevious', value: distanceFromPrevious })
+  setMetadata({ path: 'distance.horizontal.fromPrevious', value: newX - previousX })
+  setMetadata({ path: 'distance.vertical.fromPrevious', value: newY - previousY })
   setMetadata({ path: 'angle.fromPrevious', value: angleFromPrevious })
   setMetadata({ path: 'direction.fromPrevious', value: toDirection(angleFromPrevious.degrees) })
   
-  setMetadata({ path: 'distance.fromStart', value: distanceFromStart })
+  setMetadata({ path: 'distance.straight.fromStart', value: distanceFromStart })
+  setMetadata({ path: 'distance.horizontal.fromStart', value: newX - startX })
+  setMetadata({ path: 'distance.vertical.fromStart', value: newY - startY })
   setMetadata({ path: 'angle.fromStart', value: angleFromStart })
   setMetadata({ path: 'direction.fromStart', value: toDirection(angleFromStart.degrees) })
   

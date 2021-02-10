@@ -60,7 +60,7 @@ export default function touchdragdrop (options = {}) {
   }
 
   function recognize ({ getMetadata, recognized, denied }) {
-    if (getMetadata({ path: 'distance.fromStart' }) >= minDistance && getMetadata({ path: 'velocity' }) >= minVelocity) {
+    if (getMetadata({ path: 'distance.straight.fromStart' }) >= minDistance && getMetadata({ path: 'velocity' }) >= minVelocity) {
       recognized()
     } else {
       denied()

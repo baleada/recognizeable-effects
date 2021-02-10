@@ -39,7 +39,7 @@ export default function mousedrag (options = {}) {
   }
 
   function recognize ({ event, getMetadata, recognized, listener }) {
-    if (getMetadata({ path: 'distance.fromStart' }) >= minDistance) {
+    if (getMetadata({ path: 'distance.straight.fromStart' }) >= minDistance) {
       recognized()
       listener(event)
     }

@@ -38,7 +38,7 @@ export default function touchdrag (options = {}) {
   }
 
   function recognize ({ getMetadata, recognized }) {
-    if (getMetadata({ path: 'distance.fromStart' }) >= minDistance) {
+    if (getMetadata({ path: 'distance.straight.fromStart' }) >= minDistance) {
       recognized()
     }
   }

@@ -5,9 +5,9 @@ window.recognizeableHandlers = recognizeableHandlers
 window.Recognizeable = Recognizeable
 window.Listenable = Listenable
 
-// const listenable = new window.Listenable(
-//   'recognizeable', 
-//   { recognizeable: { handlers: window.recognizeableHandlers.mousedragdrop({ onMove: ({ metadata }) => console.log(metadata) }) } }
-// )
+const listenable = new window.Listenable(
+  'recognizeable', 
+  { recognizeable: { handlers: window.recognizeableHandlers.touchdrag() } }
+)
 
-// window.TEST = { listenable: listenable.listen(() => {}) }
+window.TEST = { listenable: listenable.listen(() => console.log(listenable.recognizeable.metadata.distance)) }
