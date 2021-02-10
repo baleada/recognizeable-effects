@@ -1,6 +1,6 @@
 {
   "name": "@baleada/recognizeable-handlers",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "A collection of event handlers that are compatible with Baleada Logic's Recognizeable class.",
   "type": "module",
   "module": "lib/index.js",
