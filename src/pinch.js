@@ -5,6 +5,6 @@
  * - change their starting distance by more than 0px (or a minimum distance of your choice)
  */
 
-export default function pinch () {
+export function pinch () {
  
 }

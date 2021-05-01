@@ -1,4 +1,6 @@
-import { toHookApi, naiveDeepClone, lookupToPoint } from '../util'
+import { toHookApi, naiveDeepClone, toTouchMovePoint, toTouchEndPoint } from './util'
+import type { HookApi } from './util'
+import type { RecognizeableHandlerApi } from '@baleada/logic'
 
 /*
  * touches is defined as a single touch that:
@@ -9,35 +11,48 @@ import { toHookApi, naiveDeepClone, lookupToPoint } from '../util'
  * - repeats 1 time (or a minimum number of your choice), with each tap ending less than or equal to 500ms (or a maximum interval of your choice) after the previous tap ended
  */
 
+export type TouchesOptions = {
+  minTouches?: number,
+  maxInterval?: number,
+  maxDistance?: number,
+  onStart?: TouchesHook,
+  onMove?: TouchesHook,
+  onCancel?: TouchesHook,
+  onEnd?: TouchesHook
+}
+
+export type TouchesHook = (api: TouchesHookApi) => any
+
+export type TouchesHookApi = HookApi<TouchEvent>
+
 const defaultOptions = {
-  minTaps: 1,
+  minTouches: 1,
   maxInterval: 500, // Via https://ux.stackexchange.com/questions/40364/what-is-the-expected-timeframe-of-a-double-click
   maxDistance: 5, // TODO: research appropriate/accessible minDistance
 }
 
-export default function touches (options = {}) {
+export function touches (options: TouchesOptions = {}) {
   const { onStart, onMove, onCancel, onEnd } = options,
-        minTaps = options.minTaps ?? defaultOptions.minTaps,
+        minTouches = options.minTouches ?? defaultOptions.minTouches,
         maxInterval = options.maxInterval ?? defaultOptions.maxInterval,
         maxDistance = options.maxDistance ?? defaultOptions.maxDistance
 
-  function touchstart (handlerApi) {
+  function touchstart (handlerApi: RecognizeableHandlerApi<TouchEvent>) {
     const { event, setMetadata } = handlerApi
     
     setMetadata({ path: 'touchTotal', value: event.touches.length })
     setMetadata({ path: 'lastTap.times.start', value: event.timeStamp })
 
-    const getPoint = lookupToPoint('touch')
-    setMetadata({ path: 'lastTap.points.start', value: getPoint(event) })
+    setMetadata({ path: 'lastTap.points.start', value: toTouchMovePoint(event) })
 
     onStart?.(toHookApi(handlerApi))
   }
 
-  function touchmove (handlerApi) {
+  function touchmove (handlerApi: RecognizeableHandlerApi<TouchEvent>) {
     onMove?.(toHookApi(handlerApi))
   }
 
-  function touchcancel (handlerApi) {
+  function touchcancel (handlerApi: RecognizeableHandlerApi<TouchEvent>) {
     const { getMetadata, setMetadata, denied } = handlerApi
 
     if (getMetadata({ path: 'touchTotal' }) === 1) {
@@ -48,7 +63,7 @@ export default function touches (options = {}) {
     onCancel?.(toHookApi(handlerApi))
   }
 
-  function touchend (handlerApi) {
+  function touchend (handlerApi: RecognizeableHandlerApi<TouchEvent>) {
     const { event, getMetadata, toPolarCoordinates, setMetadata, pushMetadata, denied } = handlerApi
 
     setMetadata({ path: 'touchTotal', value: getMetadata({ path: 'touchTotal' }) - 1 })
@@ -83,7 +98,7 @@ export default function touches (options = {}) {
     onEnd?.(toHookApi(handlerApi))
   }
 
-  function recognize ({ getMetadata, setMetadata, pushMetadata, denied, recognized }) {
+  function recognize ({ getMetadata, setMetadata, pushMetadata, denied, recognized }: RecognizeableHandlerApi<TouchEvent>) {
     switch (true) {
     case getMetadata({ path: 'lastTap.interval' }) > maxInterval || getMetadata({ path: 'lastTap.distance' }) > maxDistance: // Deny after multiple touches and after taps with intervals or movement distances that are too large
       const lastTap = naiveDeepClone(getMetadata({ path: 'lastTap' }))
@@ -92,7 +107,7 @@ export default function touches (options = {}) {
       pushMetadata({ path: 'taps', value: lastTap })
       break
     default:
-      if (getMetadata({ path: 'taps.length' }) >= minTaps) {
+      if (getMetadata({ path: 'taps.length' }) >= minTouches) {
         recognized()
       }
       break

@@ -1,4 +1,6 @@
-import { toHookApi, naiveDeepClone, lookupToPoint } from '../util'
+import { toHookApi, naiveDeepClone, toMousePoint } from './util'
+import type { HookApi } from './util'
+import type { RecognizeableHandlerApi } from '@baleada/logic'
 
 /*
  * clicks is defined as a single mousedown/mouseup combination that:
@@ -9,24 +11,39 @@ import { toHookApi, naiveDeepClone, lookupToPoint } from '../util'
  * - repeats 1 time (or a minimum number of your choice), with each click ending less than or equal to 500ms (or a maximum interval of your choice) after the previous click ended
  */
 
+
+export type ClicksOptions = {
+  minClicks?: number,
+  maxInterval?: number,
+  maxDistance?: number,
+  onDown?: ClicksHook,
+  onMove?: ClicksHook,
+  onLeave?: ClicksHook,
+  onUp?: ClicksHook
+}
+
+export type ClicksHook = (api: ClicksHookApi) => any
+
+export type ClicksHookApi = HookApi<MouseEvent>
+
 const defaultOptions = {
   minClicks: 1,
   maxInterval: 500, // Via https://ux.stackexchange.com/questions/40364/what-is-the-expected-timeframe-of-a-double-click
   maxDistance: 5, // TODO: research standard maxDistance
 }
 
-export default function clicks (options = {}) {
+export function clicks (options: ClicksOptions = {}) {
   const { minClicks, maxInterval, maxDistance, onDown, onMove, onLeave, onUp } = { ...defaultOptions, ...options },
-        cache = {}
+        cache: Record<any, any> = {}
 
-  function mousedown (handlerApi) {
+  function mousedown (handlerApi: RecognizeableHandlerApi<MouseEvent>) {
     const { event, setMetadata } = handlerApi
     
     setMetadata({ path: 'mouseStatus', value: 'down' })
     setMetadata({ path: 'lastClick.times.start', value: event.timeStamp })
-
-    const getPoint = lookupToPoint('mouse')
-    setMetadata({ path: 'lastClick.points.start', value: getPoint(event) })
+    
+    
+    setMetadata({ path: 'lastClick.points.start', value: toMousePoint(event) })
 
     const { target } = event
     cache.mousemoveListener = event => mousemove({ ...handlerApi, event })
@@ -35,11 +52,11 @@ export default function clicks (options = {}) {
     onDown?.(toHookApi(handlerApi))
   }
 
-  function mousemove (handlerApi) {
+  function mousemove (handlerApi: RecognizeableHandlerApi<MouseEvent>) {
     onMove?.(toHookApi(handlerApi))
   }
 
-  function mouseleave (handlerApi) {
+  function mouseleave (handlerApi: RecognizeableHandlerApi<MouseEvent>) {
     const { getMetadata, setMetadata, denied, event: { target } } = handlerApi
 
     if (getMetadata({ path: 'mouseStatus' }) === 'down') {
@@ -51,7 +68,7 @@ export default function clicks (options = {}) {
     onLeave?.(toHookApi(handlerApi))
   }
 
-  function mouseup (handlerApi) {
+  function mouseup (handlerApi: RecognizeableHandlerApi<MouseEvent>) {
     const { event, getMetadata, toPolarCoordinates, setMetadata, pushMetadata } = handlerApi
 
     setMetadata({ path: 'mouseStatus', value: 'up' })
@@ -84,7 +101,8 @@ export default function clicks (options = {}) {
 
     onUp?.(toHookApi(handlerApi))
   }
-  function recognize ({ getMetadata, denied, setMetadata, pushMetadata, recognized }) {
+
+  function recognize ({ getMetadata, denied, setMetadata, pushMetadata, recognized }: RecognizeableHandlerApi<MouseEvent>) {
     switch (true) {
     case getMetadata({ path: 'lastClick.interval' }) > maxInterval || getMetadata({ path: 'lastClick.distance' }) > maxDistance: // Deny after multiple touches and after clicks with intervals or movement distances that are too large
       const lastClick = naiveDeepClone(getMetadata({ path: 'lastClick' }))

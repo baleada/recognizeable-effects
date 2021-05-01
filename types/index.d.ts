@@ -1,0 +1,13 @@
+export { clicks } from './clicks';
+export type { ClicksOptions } from './clicks';
+export { mousedrag } from './mousedrag';
+export type { MousedragOptions } from './mousedrag';
+export { mousedragdrop } from './mousedragdrop';
+export type { MousedragdropOptions } from './mousedragdrop';
+export { touches } from './touches';
+export type { TouchesOptions } from './touches';
+export { touchdrag } from './touchdrag';
+export type { TouchdragOptions } from './touchdrag';
+export { touchdragdrop } from './touchdragdrop';
+export type { TouchdragdropOptions } from './touchdragdrop';
+export type { Direction } from './util';

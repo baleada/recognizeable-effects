@@ -1,4 +1,13 @@
-const directions = {
+export type Direction =  'up' | 'upRight' | 'right' | 'downRight' | 'down' | 'downLeft' | 'left' | 'upLeft'
+type Unit = 'degrees' | 'radians'
+
+type PredicatesByUnit = Record<Unit, (angle: number) => boolean>
+
+export function toDirection (angle: number, unit: Unit = 'degrees'): Direction {
+  return (Object.keys(directions) as Direction[]).find(direction => directions[direction][unit](angle))
+}
+
+const directions: Record<Direction, PredicatesByUnit> = {
   up: {
     degrees: degrees => (degrees >= 67.5 && degrees <= 112.5),
     radians: radians => (radians >= 0.375 * Math.PI && radians <= 0.625 * Math.PI),
@@ -31,8 +40,4 @@ const directions = {
     degrees: degrees => (degrees > 112.5 && degrees <= 157.5),
     radians: radians => (radians > 0.625 * Math.PI && radians <= 0.875 * Math.PI),
   },
-}
-
-export default function(angle, unit = 'degrees') {
-  return Object.keys(directions).find(direction => directions[direction][unit](angle))
 }

@@ -1,4 +1,6 @@
-import { toHookApi, storeStartMetadata, storeMoveMetadata } from '../util'
+import type { RecognizeableHandlerApi } from '@baleada/logic'
+import { toHookApi, storeStartMetadata, storeMoveMetadata } from './util'
+import type { HookApi } from './util'
 
 /*
  * touchdrag is defined as a single touch that:
@@ -7,15 +9,27 @@ import { toHookApi, storeStartMetadata, storeMoveMetadata } from '../util'
  * - does not cancel or end
  */
 
-const defaultOptions = {
-  minDistance: 0, // TODO: research appropriate/accessible minDistance
+export type TouchdragOptions = {
+  minDistance?: number,
+  onStart?: TouchdragHook,
+  onMove?: TouchdragHook,
+  onCancel?: TouchdragHook,
+  onEnd?: TouchdragHook
 }
 
-export default function touchdrag (options = {}) {
+export type TouchdragHook = (api: TouchdragHookApi) => any
+
+export type TouchdragHookApi = HookApi<TouchEvent>
+
+const defaultOptions = {
+  minDistance: 0,
+}
+
+export function touchdrag (options: TouchdragOptions = {}) {
   const { onStart, onMove, onCancel, onEnd } = options,
         minDistance = options.minDistance ?? defaultOptions.minDistance
 
-  function touchstart (handlerApi) {
+  function touchstart (handlerApi: RecognizeableHandlerApi<TouchEvent>) {
     const { event, setMetadata } = handlerApi
     
     setMetadata({ path: 'touchTotal', value: event.touches.length })
@@ -24,7 +38,7 @@ export default function touchdrag (options = {}) {
     onStart?.(toHookApi(handlerApi))
   }
 
-  function touchmove (handlerApi) {
+  function touchmove (handlerApi: RecognizeableHandlerApi<TouchEvent>) {
     const { event, getMetadata, denied } = handlerApi
 
     if (getMetadata({ path: 'touchTotal' }) === 1) {
@@ -37,13 +51,13 @@ export default function touchdrag (options = {}) {
     onMove?.(toHookApi(handlerApi))
   }
 
-  function recognize ({ getMetadata, recognized }) {
+  function recognize ({ getMetadata, recognized }: RecognizeableHandlerApi<TouchEvent>) {
     if (getMetadata({ path: 'distance.straight.fromStart' }) >= minDistance) {
       recognized()
     }
   }
 
-  function touchcancel (handlerApi) {
+  function touchcancel (handlerApi: RecognizeableHandlerApi<TouchEvent>) {
     const { denied } = handlerApi
 
     denied()
@@ -51,7 +65,7 @@ export default function touchdrag (options = {}) {
     onCancel?.(toHookApi(handlerApi))
   }
 
-  function touchend (handlerApi) {
+  function touchend (handlerApi: RecognizeableHandlerApi<TouchEvent>) {
     const { denied } = handlerApi
 
     denied()

@@ -4,6 +4,6 @@
  * - change their starting angle by more than 0 degrees (or a minimum rotation of your choice)
  */
 
-export default function rotate () {
+export function rotate () {
 
 }

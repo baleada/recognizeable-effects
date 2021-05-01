@@ -1,13 +1,20 @@
-import lookupToPoint from './lookupToPoint'
-import toDirection from './toDirection'
+import type { RecognizeableHandlerApi } from '@baleada/logic'
+import { createToPoint } from './createToPoint'
+import type { ToPointType } from './createToPoint'
+import { toDirection } from './toDirection'
 
-export default function storeMoveMetadata (event, handlerApi, type) {
+export function storeMoveMetadata (
+  event: MouseEvent | TouchEvent,
+  handlerApi: RecognizeableHandlerApi<MouseEvent | TouchEvent>,
+  type: ToPointType
+): void {
   const { getMetadata, toPolarCoordinates, setMetadata } = handlerApi,
-        getPoint = lookupToPoint(type)
+        toPoint = createToPoint(type)
 
   const { x: previousX, y: previousY } = getMetadata({ path: 'points.end' }),
         { x: startX, y: startY } = getMetadata({ path: 'points.start' }),
-        { x: newX, y: newY } = getPoint(event),
+        // @ts-ignore
+        { x: newX, y: newY } = toPoint(event),
         { distance: distanceFromPrevious, angle: angleFromPrevious } = toPolarCoordinates({
           xA: previousX,
           xB: newX,
