@@ -5,15 +5,15 @@ import { Listenable, Recognizeable } from '@baleada/logic'
 (window as any).Recognizeable = Recognizeable;
 (window as any).Listenable = Listenable;
 
-const listenable = new (window as any).Listenable(
-  'recognizeable', 
-  {
-    recognizeable: {
-      handlers: (window as any).recognizeableHandlers.konami()
-    }
-  }
-);
+// const listenable = new (window as any).Listenable(
+//   'recognizeable', 
+//   {
+//     recognizeable: {
+//       handlers: (window as any).recognizeableHandlers.konami()
+//     }
+//   }
+// );
 
-(window as any).TEST = {
-  listenable: listenable.listen(() => console.log(listenable.recognizeable.metadata))
-}
+// (window as any).TEST = {
+//   listenable: listenable.listen(() => console.log(listenable.recognizeable.metadata))
+// }
