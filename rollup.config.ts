@@ -1,8 +1,12 @@
 import { configureable } from '@baleada/prepare'
 
-const esm = new configureable.Rollup()
+const external = [
+        '@baleada/logic'
+      ],
+      esm = new configureable.Rollup()
         .delete({ targets: 'lib/*' })
         .input('src/index.ts')
+        .external(external)
         .typescript()
         .resolve()
         .esm({ file: 'lib/index.js', target: 'browser' })
@@ -10,6 +14,7 @@ const esm = new configureable.Rollup()
         .configure(),
       dts = new configureable.Rollup()
         .input('types/index.d.ts')
+        .external(external)
         .output({ file: 'lib/index.d.ts', format: 'esm' })
         .dts()
         .configure()
