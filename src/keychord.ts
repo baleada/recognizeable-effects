@@ -41,17 +41,24 @@ export function keychord (keycombos: string, options: KeychordOptions = {}) {
         { maxInterval, preventsDefaultUnlessDenied, onDown } = { ...defaultOptions, ...options },
         cache = {
           currentKeycomboIndex: 0,
+          lastTimeStamp: 0,
           wasRecognized: false,
         }
 
   function keydown (handlerApi: RecognizeableHandlerApi<KeyboardEvent>) {
     if (cache.wasRecognized) {
-      cache.wasRecognized = false
       cleanup(handlerApi)
     }
 
-    const keycombo = ensuredKeycombos[cache.currentKeycomboIndex],
-          { event, denied, pushMetadata, getStatus } = handlerApi
+    const { event, denied, pushMetadata, getStatus } = handlerApi
+    
+    if (event.timeStamp - cache.lastTimeStamp > maxInterval) {
+      cleanup(handlerApi)
+    }
+
+    cache.lastTimeStamp = event.timeStamp
+
+    const keycombo = ensuredKeycombos[cache.currentKeycomboIndex]
 
     if (!eventMatchesKeycombo({ event, keycombo })) {
       denied()
@@ -80,24 +87,8 @@ export function keychord (keycombos: string, options: KeychordOptions = {}) {
   }
 
   function recognize (handlerApi: RecognizeableHandlerApi<KeyboardEvent>) {
-    const {
-            getMetadata,
-            denied,
-            recognized,
-          } = handlerApi,
+    const { recognized, getMetadata, } = handlerApi,
           metadata: KeychordMetadata = getMetadata()
-
-    // Deny if the max interval was exceeded. Not relevant for first keycombo.
-    if (cache.currentKeycomboIndex !== 0) {
-      const lastKeycombo = metadata.keycombos[metadata.keycombos.length - 1],
-            secondToLastKeycombo = metadata.keycombos[metadata.keycombos.length - 2]
-
-      if (lastKeycombo.time - secondToLastKeycombo.time > maxInterval) {
-        denied()
-        cleanup(handlerApi)
-        return
-      }
-    }
 
     // Wait for more keycombos if necessary.
     if (metadata.keycombos.length < ensuredKeycombos.length) {
@@ -112,10 +103,9 @@ export function keychord (keycombos: string, options: KeychordOptions = {}) {
   }
 
   function cleanup (handlerApi: RecognizeableHandlerApi<KeyboardEvent>) {
-    const { setMetadata } = handlerApi
-    setMetadata({ path: 'keycombos', value: [] })
-
+    handlerApi.setMetadata({ path: 'keycombos', value: [] })
     cache.currentKeycomboIndex = 0
+    cache.wasRecognized = false
   }
 
   return {
