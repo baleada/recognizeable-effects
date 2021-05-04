@@ -12,19 +12,19 @@ suite.before.each(async ({ puppeteer: { page } }) => {
 
 suite(`recognizes mousedragdrop`, async ({ puppeteer: { page } }) => {
   await page.evaluate(async () => {
-    const listenable = new window.Listenable(
+    const listenable = new (window as any).Listenable(
       'recognizeable', 
-      { recognizeable: { handlers: window.recognizeableHandlers.mousedragdrop() } }
-    )
+      { recognizeable: { handlers: (window as any).recognizeableHandlers.mousedragdrop() } }
+    );
 
-    window.TEST = { listenable: listenable.listen(() => {}) }
+    (window as any).TEST = { listenable: listenable.listen(() => {}) }
   })
 
   await page.mouse.down()
   await page.mouse.move(0, 100)
   await page.mouse.up()
   
-  const value = await page.evaluate(() => window.TEST.listenable.recognizeable.status),
+  const value = await page.evaluate(() => (window as any).TEST.listenable.recognizeable.status),
         expected = 'recognized'
 
   assert.is(value, expected)
@@ -32,19 +32,19 @@ suite(`recognizes mousedragdrop`, async ({ puppeteer: { page } }) => {
 
 suite(`respects minDistance option`, async ({ puppeteer: { page } }) => {
   await page.evaluate(async () => {
-    const listenable = new window.Listenable(
+    const listenable = new (window as any).Listenable(
       'recognizeable', 
-      { recognizeable: { handlers: window.recognizeableHandlers.mousedragdrop({ minDistance: 101 }) } }
-    )
+      { recognizeable: { handlers: (window as any).recognizeableHandlers.mousedragdrop({ minDistance: 101 }) } }
+    );
     
-    window.TEST = { listenable: listenable.listen(() => {}) }
+    (window as any).TEST = { listenable: listenable.listen(() => {}) }
   })
 
   await page.mouse.down()
   await page.mouse.move(0, 100)
   await page.mouse.up()
   
-  const from = await page.evaluate(() => window.TEST.listenable.recognizeable.status)
+  const from = await page.evaluate(() => (window as any).TEST.listenable.recognizeable.status)
   assert.is(from, 'denied')
   
   await page.mouse.move(0, 0)
@@ -52,7 +52,7 @@ suite(`respects minDistance option`, async ({ puppeteer: { page } }) => {
   await page.mouse.move(0, 101)
   await page.mouse.up()
   
-  const to = await page.evaluate(() => window.TEST.listenable.recognizeable.status)
+  const to = await page.evaluate(() => (window as any).TEST.listenable.recognizeable.status)
   assert.is(to, 'recognized')
 })
 
@@ -62,7 +62,7 @@ suite.skip(`respects minVelocity option`, async ({ puppeteer: { page } }) => {
 
 suite(`calls hooks`, async ({ puppeteer: { page } }) => {
   await page.evaluate(async () => {
-    window.TEST = {
+    (window as any).TEST = {
       hooks: {
         onDown: false,
         onMove: false,
@@ -70,14 +70,14 @@ suite(`calls hooks`, async ({ puppeteer: { page } }) => {
       }
     }
 
-    const listenable = new window.Listenable(
+    const listenable = new (window as any).Listenable(
       'recognizeable', 
       {
         recognizeable: {
-          handlers: window.recognizeableHandlers.mousedragdrop({
-            onDown: () => window.TEST.hooks.onDown = true,
-            onMove: () => window.TEST.hooks.onMove = true,
-            onUp: () => window.TEST.hooks.onUp = true,
+          handlers: (window as any).recognizeableHandlers.mousedragdrop({
+            onDown: () => (window as any).TEST.hooks.onDown = true,
+            onMove: () => (window as any).TEST.hooks.onMove = true,
+            onUp: () => (window as any).TEST.hooks.onUp = true,
           })
         }
       }
@@ -90,7 +90,7 @@ suite(`calls hooks`, async ({ puppeteer: { page } }) => {
   await page.mouse.move(0, 100)
   await page.mouse.up()
   
-  const value = await page.evaluate(() => window.TEST.hooks),
+  const value = await page.evaluate(() => (window as any).TEST.hooks),
         expected = { onDown: true, onMove: true, onUp: true }
   
   assert.equal(value, expected)
@@ -98,18 +98,18 @@ suite(`calls hooks`, async ({ puppeteer: { page } }) => {
 
 suite(`doesn't listen for mousemove before mousedown`, async ({ puppeteer: { page } }) => {
   await page.evaluate(async () => {
-    window.TEST = {
+    (window as any).TEST = {
       hooks: {
         onMove: false,
       }
     }
 
-    const listenable = new window.Listenable(
+    const listenable = new (window as any).Listenable(
       'recognizeable', 
       {
         recognizeable: {
-          handlers: window.recognizeableHandlers.mousedragdrop({
-            onMove: () => window.TEST.hooks.onMove = true,
+          handlers: (window as any).recognizeableHandlers.mousedragdrop({
+            onMove: () => (window as any).TEST.hooks.onMove = true,
           })
         }
       }
@@ -120,7 +120,7 @@ suite(`doesn't listen for mousemove before mousedown`, async ({ puppeteer: { pag
 
   await page.mouse.move(0, 100)
   
-  const value = await page.evaluate(() => window.TEST.hooks),
+  const value = await page.evaluate(() => (window as any).TEST.hooks),
         expected = { onMove: false }
   
   assert.equal(value, expected)
@@ -128,20 +128,20 @@ suite(`doesn't listen for mousemove before mousedown`, async ({ puppeteer: { pag
 
 suite(`doesn't listen for mousemove after mouseup`, async ({ puppeteer: { page } }) => {
   await page.evaluate(async () => {
-    window.TEST = {
+    (window as any).TEST = {
       hooks: {
         onMove: false,
         onUp: false,
       }
     }
 
-    const listenable = new window.Listenable(
+    const listenable = new (window as any).Listenable(
       'recognizeable', 
       {
         recognizeable: {
-          handlers: window.recognizeableHandlers.mousedragdrop({
-            onMove: () => window.TEST.hooks.onMove = window.TEST.hooks.onUp && true,
-            onUp: () => window.TEST.hooks.onUp = true,
+          handlers: (window as any).recognizeableHandlers.mousedragdrop({
+            onMove: () => (window as any).TEST.hooks.onMove = (window as any).TEST.hooks.onUp && true,
+            onUp: () => (window as any).TEST.hooks.onUp = true,
           })
         }
       }
@@ -155,7 +155,7 @@ suite(`doesn't listen for mousemove after mouseup`, async ({ puppeteer: { page }
   await page.mouse.up()
   await page.mouse.move(0, 100)
   
-  const value = await page.evaluate(() => window.TEST.hooks),
+  const value = await page.evaluate(() => (window as any).TEST.hooks),
         expected = { onMove: false, onUp: true }
   
   assert.equal(value, expected)

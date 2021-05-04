@@ -1,6 +1,6 @@
+import type { RecognizeableHandlerApi } from '@baleada/logic'
 import { toHookApi, naiveDeepClone, toMousePoint } from './util'
 import type { HookApi } from './util'
-import type { RecognizeableHandlerApi } from '@baleada/logic'
 
 /*
  * clicks is defined as a single mousedown/mouseup combination that:
@@ -22,6 +22,25 @@ export type ClicksOptions = {
   onUp?: ClicksHook
 }
 
+export type ClicksMetadata = {
+  mouseStatus: 'down' | 'up' | 'leave',
+  lastClick: ClickMetadata,
+  clicks: ClickMetadata[],
+}
+
+type ClickMetadata = {
+  times: {
+    start: number,
+    end: number
+  },
+  points: {
+    start: { x: number, y: number },
+    end: { x: number, y: number }
+  },
+  distance: number,
+  interval: number
+}
+
 export type ClicksHook = (api: ClicksHookApi) => any
 
 export type ClicksHookApi = HookApi<MouseEvent>
@@ -41,7 +60,6 @@ export function clicks (options: ClicksOptions = {}) {
     
     setMetadata({ path: 'mouseStatus', value: 'down' })
     setMetadata({ path: 'lastClick.times.start', value: event.timeStamp })
-    
     
     setMetadata({ path: 'lastClick.points.start', value: toMousePoint(event) })
 

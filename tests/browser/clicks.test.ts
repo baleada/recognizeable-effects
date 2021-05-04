@@ -12,18 +12,18 @@ suite.before.each(async ({ puppeteer: { page } }) => {
 
 suite(`recognizes clicks`, async ({ puppeteer: { page } }) => {
   await page.evaluate(async () => {
-    const listenable = new window.Listenable(
+    const listenable = new (window as any).Listenable(
       'recognizeable', 
-      { recognizeable: { handlers: window.recognizeableHandlers.clicks() } }
-    )
+      { recognizeable: { handlers: (window as any).recognizeableHandlers.clicks() } }
+    );
 
-    window.TEST = { listenable: listenable.listen(() => {}) }
+    (window as any).TEST = { listenable: listenable.listen(() => {}) }
   })
 
   await page.mouse.down()
   await page.mouse.up()
   
-  const value = await page.evaluate(() => window.TEST.listenable.recognizeable.status),
+  const value = await page.evaluate(() => (window as any).TEST.listenable.recognizeable.status),
         expected = 'recognized'
 
   assert.is(value, expected)

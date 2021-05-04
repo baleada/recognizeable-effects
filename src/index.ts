@@ -1,5 +1,5 @@
 export { clicks } from './clicks'
-export type { ClicksOptions } from './clicks'
+export type { ClicksOptions, ClicksMetadata } from './clicks'
 
 export { mousedrag } from './mousedrag'
 export type { MousedragOptions } from './mousedrag'
@@ -24,6 +24,12 @@ export type { TouchdragdropOptions } from './touchdragdrop'
 
 // export { rotate } from './rotate'
 // export type { RotateOptions } from './rotate'
+
+export { keychord } from './keychord'
+export type { KeychordOptions, KeychordMetadata } from './keychord'
+
+export { konami } from './konami'
+export type { KonamiOptions, KonamiMetadata } from './konami'
 
 // UTIL
 export type { Direction } from './util'
