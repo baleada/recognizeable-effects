@@ -3,12 +3,6 @@ import type { RecognizeableHandlerApi } from "@baleada/logic"
 import { toHookApi } from './util'
 import type { HookApi } from './util'
 
-/*
- * keychord is defined as at least two keyboard events that meet these conditions:
- * - each key comes back up before the next goes down
- * - excluding the first keydown, each keydown must happen less than or equal to 500ms (or a maximum interval of your choice) after the previous keyup
- */
-
 export type KeychordOptions = {
   maxInterval?: number,
   onDown?: KeychordHook,
@@ -24,7 +18,7 @@ export type KeychordMetadata = {
 }
 
 type KeycomboMetadata = {
-  type: string,
+  name: string,
   time: number
 }
 
@@ -71,7 +65,7 @@ export function keychord (keycombos: string, options: KeychordOptions = {}) {
       path: 'keycombos',
       value: {
         time: event.timeStamp,
-        type: toType(keycombo)
+        name: toName(keycombo)
       }
     })
 
@@ -113,6 +107,6 @@ export function keychord (keycombos: string, options: KeychordOptions = {}) {
   }
 }
 
-function toType (keycombo: ListenableKeycomboItem[]) {
+function toName (keycombo: ListenableKeycomboItem[]) {
   return keycombo.map(({ name }) => name).join('+')
 }
