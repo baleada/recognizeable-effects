@@ -1,7 +1,8 @@
 import { configureable } from '@baleada/prepare'
 
 const external = [
-        '@baleada/logic'
+        '@baleada/logic',
+        'lazy-collections'
       ],
       esm = new configureable.Rollup()
         .delete({ targets: 'lib/*' })

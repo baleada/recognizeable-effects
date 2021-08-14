@@ -1,6 +1,6 @@
-import type { RecognizeableHandlerApi } from '@baleada/logic'
-import { toHookApi, naiveDeepClone, toMousePoint } from './util'
-import type { HookApi } from './util'
+import { Listenable, ListenEffectParam, RecognizeableEffectApi, RecognizeableOptions } from '@baleada/logic'
+import { toHookApi, toCloned, toMousePoint, toPolarCoordinates } from './extracted'
+import type { HookApi, PointerStartMetadata } from './extracted'
 
 /*
  * clicks is defined as a single mousedown/mouseup combination that:
@@ -11,6 +11,20 @@ import type { HookApi } from './util'
  * - repeats 1 time (or a minimum number of your choice), with each click ending less than or equal to 500ms (or a maximum interval of your choice) after the previous click ended
  */
 
+export type ClicksTypes = 'mousedown' | 'mouseleave' | 'mouseup'
+
+export type ClicksMetadata = {
+  mouseStatus: 'down' | 'up' | 'leave',
+  lastClick: Click,
+  clicks: Click[],
+}
+
+type Click = {
+  times: PointerStartMetadata['times'],
+  points: PointerStartMetadata['points'], 
+  distance: number,
+  interval: number
+}
 
 export type ClicksOptions = {
   minClicks?: number,
@@ -22,28 +36,9 @@ export type ClicksOptions = {
   onUp?: ClicksHook
 }
 
-export type ClicksMetadata = {
-  mouseStatus: 'down' | 'up' | 'leave',
-  lastClick: ClickMetadata,
-  clicks: ClickMetadata[],
-}
-
-type ClickMetadata = {
-  times: {
-    start: number,
-    end: number
-  },
-  points: {
-    start: { x: number, y: number },
-    end: { x: number, y: number }
-  },
-  distance: number,
-  interval: number
-}
-
 export type ClicksHook = (api: ClicksHookApi) => any
 
-export type ClicksHookApi = HookApi<MouseEvent>
+export type ClicksHookApi = HookApi<ClicksTypes, ClicksMetadata>
 
 const defaultOptions = {
   minClicks: 1,
@@ -51,95 +46,116 @@ const defaultOptions = {
   maxDistance: 5, // TODO: research standard maxDistance
 }
 
-export function clicks (options: ClicksOptions = {}) {
+const initialClick: Click = {
+  times: {
+    start: 0,
+    end: 0
+  },
+  points: {
+    start: { x: 0, y: 0 },
+    end: { x: 0, y: 0 }
+  },
+  distance: 0,
+  interval: 0
+}
+
+export function clicks (options: ClicksOptions = {}): RecognizeableOptions<ClicksTypes, ClicksMetadata>['effects'] {
   const { minClicks, maxInterval, maxDistance, onDown, onMove, onLeave, onUp } = { ...defaultOptions, ...options },
-        cache: Record<any, any> = {}
+        cache: { mousemoveEffect?: (event: ListenEffectParam<'mousemove'>) => void } = {}
 
-  function mousedown (handlerApi: RecognizeableHandlerApi<MouseEvent>) {
-    const { event, setMetadata } = handlerApi
+  function mousedown (effectApi: RecognizeableEffectApi<ClicksTypes, ClicksMetadata>) {
+    const { sequenceItem: event, getMetadata } = effectApi,
+          metadata = getMetadata()
     
-    setMetadata({ path: 'mouseStatus', value: 'down' })
-    setMetadata({ path: 'lastClick.times.start', value: event.timeStamp })
+    metadata.mouseStatus = 'down'
     
-    setMetadata({ path: 'lastClick.points.start', value: toMousePoint(event) })
-
-    const { target } = event
-    cache.mousemoveListener = event => mousemove({ ...handlerApi, event })
-    target.addEventListener('mousemove', cache.mousemoveListener)
-
-    onDown?.(toHookApi(handlerApi))
-  }
-
-  function mousemove (handlerApi: RecognizeableHandlerApi<MouseEvent>) {
-    onMove?.(toHookApi(handlerApi))
-  }
-
-  function mouseleave (handlerApi: RecognizeableHandlerApi<MouseEvent>) {
-    const { getMetadata, setMetadata, denied, event: { target } } = handlerApi
-
-    if (getMetadata({ path: 'mouseStatus' }) === 'down') {
-      denied()
-      setMetadata({ path: 'mouseStatus', value: 'leave' })
-      target.removeEventListener('mousemove', cache.mousemoveListener)
+    if (!metadata.lastClick) {
+      metadata.lastClick = toCloned(initialClick)
     }
 
-    onLeave?.(toHookApi(handlerApi))
+    metadata.lastClick.times.start = event.timeStamp
+    metadata.lastClick.points.start = toMousePoint(event)
+
+    const { target } = event
+    cache.mousemoveEffect = event => mousemove({ ...effectApi, sequenceItem: event })
+    target.addEventListener('mousemove', cache.mousemoveEffect)
+
+    onDown?.(toHookApi(effectApi))
   }
 
-  function mouseup (handlerApi: RecognizeableHandlerApi<MouseEvent>) {
-    const { event, getMetadata, toPolarCoordinates, setMetadata, pushMetadata } = handlerApi
+  function mousemove (effectApi: RecognizeableEffectApi<ClicksTypes, ClicksMetadata>) {
+    onMove?.(toHookApi(effectApi))
+  }
 
-    setMetadata({ path: 'mouseStatus', value: 'up' })
+  function mouseleave (effectApi: RecognizeableEffectApi<ClicksTypes, ClicksMetadata>) {
+    const { getMetadata, denied, sequenceItem: { target } } = effectApi,
+          metadata = getMetadata()
 
-    const { x: xA, y: yA } = getMetadata({ path: 'lastClick.points.start' }),
+    if (metadata.mouseStatus === 'down') {
+      denied()
+      metadata.mouseStatus = 'leave'
+      target.removeEventListener('mousemove', cache.mousemoveEffect)
+    }
+
+    onLeave?.(toHookApi(effectApi))
+  }
+
+  function mouseup (effectApi: RecognizeableEffectApi<ClicksTypes, ClicksMetadata>) {
+    const { sequenceItem: event, getMetadata } = effectApi,
+          metadata = getMetadata()
+
+    metadata.mouseStatus = 'up'
+
+    const { x: xA, y: yA } = metadata.lastClick.points.start,
           { clientX: xB, clientY: yB } = event,
           { distance } = toPolarCoordinates({ xA, xB, yA, yB }),
           endPoint = { x: xB, y: yB },
           endTime = event.timeStamp
 
-    setMetadata({ path: 'lastClick.points.end', value: endPoint })
-    setMetadata({ path: 'lastClick.times.end', value: endTime })
-    setMetadata({ path: 'lastClick.distance', value: distance })
+    metadata.lastClick.points.end = endPoint
+    metadata.lastClick.times.end = endTime
+    metadata.lastClick.distance = distance
 
-    if (!Array.isArray(getMetadata({ path: 'clicks' }))) {
-      setMetadata({ path: 'clicks', value: [] })
+    if (!metadata.clicks) {
+      metadata.clicks = []
     }
-    const interval = getMetadata({ path: 'clicks.length' }) === 0
+
+    const interval = metadata.clicks.length === 0
       ? 0
-      : endTime - getMetadata({ path: 'clicks.last.times.end' })
-    setMetadata({ path: 'lastClick.interval', value: interval })
+      : endTime - metadata.clicks[metadata.clicks.length - 1].times.end
 
-    const newClick = naiveDeepClone(getMetadata({ path: 'lastClick' }))
-    pushMetadata({ path: 'clicks', value: newClick })
+    metadata.lastClick.interval = interval
 
-    recognize(handlerApi)
+    const newClick = toCloned(metadata.lastClick)
+    metadata.clicks.push(newClick)
+
+    recognize(effectApi)
 
     const { target } = event
-    target.removeEventListener('mousemove', cache.mousemoveListener)
+    target.removeEventListener('mousemove', cache.mousemoveEffect)
 
-    onUp?.(toHookApi(handlerApi))
+    onUp?.(toHookApi(effectApi))
   }
 
-  function recognize ({ getMetadata, denied, setMetadata, pushMetadata, recognized }: RecognizeableHandlerApi<MouseEvent>) {
+  function recognize ({ getMetadata, denied, recognized }: RecognizeableEffectApi<ClicksTypes, ClicksMetadata>) {
+    const metadata = getMetadata()
     switch (true) {
-    case getMetadata({ path: 'lastClick.interval' }) > maxInterval || getMetadata({ path: 'lastClick.distance' }) > maxDistance: // Deny after multiple touches and after clicks with intervals or movement distances that are too large
-      const lastClick = naiveDeepClone(getMetadata({ path: 'lastClick' }))
-      denied()
-      setMetadata({ path: 'clicks', value: [] })
-      pushMetadata({ path: 'clicks', value: lastClick })
-      break
-    default:
-      if (getMetadata({ path: 'clicks.length' }) >= minClicks) {
-        recognized()
+      case metadata.lastClick.interval > maxInterval || metadata.lastClick.distance > maxDistance: // Deny after multiple touches and after clicks with intervals or movement distances that are too large
+        const lastClick = toCloned(metadata.lastClick)
+        denied()
+        metadata.clicks = [metadata.lastClick]
+        break
+      default:
+        if (metadata.clicks.length >= minClicks) {
+          recognized()
+        }
+        break
       }
-      break
-    }
   }
 
-  return {
-    mousedown,
-    // mousemove,
-    mouseleave,
-    mouseup,
-  }
+  return defineEffect => [
+    defineEffect('mousedown', mousedown),
+    defineEffect('mouseleave', mouseleave),
+    defineEffect('mouseup', mouseup),
+  ]
 }

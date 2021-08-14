@@ -1,23 +1,27 @@
 import { suite as createSuite } from 'uvu'
 import * as assert from 'uvu/assert'
-import { withPuppeteer } from '@baleada/prepare'
+import { withPlaywright } from '@baleada/prepare'
+import { WithGlobals } from '../fixtures/types'
+import type {
+  KeychordTypes,
+  KeychordMetadata,
+  KeychordOptions,
+  KeychordHook,
+  KeychordHookApi
+} from '../../src'
 
-const suite = withPuppeteer(
-  createSuite('keychord (browser)')
+const suite = withPlaywright(
+  createSuite('keychord')
 )
 
-suite.before.each(async ({ puppeteer: { page } }) => {
-  await page.goto('http://localhost:3000')
-})
-
-suite(`recognizes keychords`, async ({ puppeteer: { page } }) => {
+suite(`recognizes keychords`, async ({ playwright: { page, reloadNext } }) => {
   await page.evaluate(async () => {
-    const listenable = new (window as any).Listenable(
-      'recognizeable', 
-      { recognizeable: { handlers: (window as any).recognizeableHandlers.keychord('p o o p') } }
+    const listenable = new (window as unknown as WithGlobals).Listenable<KeychordTypes, KeychordMetadata>(
+      'recognizeable' as KeychordTypes,
+      { recognizeable: { effects: (window as unknown as WithGlobals).effects.keychord('p o o p') } }
     );
 
-    (window as any).TEST = { listenable: listenable.listen(() => {}) }
+    (window as unknown as WithGlobals).testState = { listenable: listenable.listen(() => {}) }
   })
 
   await page.keyboard.press('P')
@@ -25,20 +29,22 @@ suite(`recognizes keychords`, async ({ puppeteer: { page } }) => {
   await page.keyboard.press('O')
   await page.keyboard.press('P')
   
-  const value = await page.evaluate(() => (window as any).TEST.listenable.recognizeable.status),
+  const value = await page.evaluate(() => (window as unknown as WithGlobals).testState.listenable.recognizeable.status),
         expected = 'recognized'
 
   assert.is(value, expected)
+
+  reloadNext()
 })
 
-suite(`starts over from beginning after max interval is exceeded`, async ({ puppeteer: { page } }) => {
+suite(`starts over from beginning after max interval is exceeded`, async ({ playwright: { page, reloadNext } }) => {
   await page.evaluate(async () => {
-    const listenable = new (window as any).Listenable(
-      'recognizeable', 
-      { recognizeable: { handlers: (window as any).recognizeableHandlers.keychord('p o o p', { maxInterval: 100 }) } }
+    const listenable = new (window as unknown as WithGlobals).Listenable<KeychordTypes, KeychordMetadata>(
+      'recognizeable' as KeychordTypes,
+      { recognizeable: { effects: (window as unknown as WithGlobals).effects.keychord('p o o p', { maxInterval: 100 }) } }
     );
 
-    (window as any).TEST = { listenable: listenable.listen(() => {}) }
+    (window as unknown as WithGlobals).testState = { listenable: listenable.listen(() => {}) }
   })
 
   await page.keyboard.press('P')
@@ -47,10 +53,12 @@ suite(`starts over from beginning after max interval is exceeded`, async ({ pupp
   await page.waitForTimeout(500)
   await page.keyboard.press('P')
   
-  const value = await page.evaluate(() => (window as any).TEST.listenable.recognizeable.status),
+  const value = await page.evaluate(() => (window as unknown as WithGlobals).testState.listenable.recognizeable.status),
         expected = 'recognizing'
 
   assert.is(value, expected)
+
+  reloadNext()
 })
 
 

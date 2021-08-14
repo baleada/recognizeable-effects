@@ -1,17 +1,3 @@
-export type ToPointType = 'mouse' | 'touch' | 'touchend'
-type ToPoint = ((event: MouseEvent) => { x: number, y: number }) | ((event: TouchEvent) => { x: number, y: number })
-
-export function createToPoint (type: ToPointType): ToPoint {
-  switch (type) {
-    case 'mouse':
-      return toMousePoint
-    case 'touch':
-      return toTouchMovePoint
-    case 'touchend':
-      return toTouchEndPoint
-  }
-}
-
 export function toMousePoint (event: MouseEvent): { x: number, y: number } {
   return {
     x: event.clientX,

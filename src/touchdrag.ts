@@ -1,6 +1,6 @@
-import type { RecognizeableHandlerApi } from '@baleada/logic'
-import { toHookApi, storeStartMetadata, storeMoveMetadata } from './util'
-import type { HookApi } from './util'
+import type { RecognizeableEffectApi, RecognizeableOptions } from '@baleada/logic'
+import { toHookApi, storePointerStartMetadata, storePointerMoveMetadata } from './extracted'
+import type { HookApi, PointerStartMetadata, PointerMoveMetadata } from './extracted'
 
 /*
  * touchdrag is defined as a single touch that:
@@ -8,6 +8,12 @@ import type { HookApi } from './util'
  * - travels a distance greater than 0px (or a minimum distance of your choice)
  * - does not cancel or end
  */
+
+export type TouchdragTypes = 'touchstart' | 'touchmove' | 'touchend' | 'touchcancel'
+
+export type TouchdragMetadata = {
+  touchTotal: number
+} & PointerStartMetadata & PointerMoveMetadata
 
 export type TouchdragOptions = {
   minDistance?: number,
@@ -19,64 +25,69 @@ export type TouchdragOptions = {
 
 export type TouchdragHook = (api: TouchdragHookApi) => any
 
-export type TouchdragHookApi = HookApi<TouchEvent>
+export type TouchdragHookApi = HookApi<TouchdragTypes, TouchdragMetadata>
 
 const defaultOptions = {
   minDistance: 0,
 }
 
-export function touchdrag (options: TouchdragOptions = {}) {
+export function touchdrag (options: TouchdragOptions = {}): RecognizeableOptions<TouchdragTypes, TouchdragMetadata>['effects'] {
   const { onStart, onMove, onCancel, onEnd } = options,
         minDistance = options.minDistance ?? defaultOptions.minDistance
 
-  function touchstart (handlerApi: RecognizeableHandlerApi<TouchEvent>) {
-    const { event, setMetadata } = handlerApi
+  function touchstart (effectApi: RecognizeableEffectApi<'touchstart', TouchdragMetadata>) {
+    const { sequenceItem: event, getMetadata } = effectApi,
+          metadata = getMetadata()
     
-    setMetadata({ path: 'touchTotal', value: event.touches.length })
-    storeStartMetadata(event, handlerApi, 'touch')
+    metadata.touchTotal = event.touches.length
+    storePointerStartMetadata(effectApi)
     
-    onStart?.(toHookApi(handlerApi))
+    onStart?.(toHookApi(effectApi))
   }
 
-  function touchmove (handlerApi: RecognizeableHandlerApi<TouchEvent>) {
-    const { event, getMetadata, denied } = handlerApi
+  function touchmove (effectApi: RecognizeableEffectApi<'touchmove', TouchdragMetadata>) {
+    const { getMetadata, denied } = effectApi,
+          metadata = getMetadata()
 
-    if (getMetadata({ path: 'touchTotal' }) === 1) {
-      storeMoveMetadata(event, handlerApi, 'touch')
-      recognize(handlerApi)
+    if (metadata.touchTotal === 1) {
+      storePointerMoveMetadata(effectApi)
+      recognize(effectApi)
     } else {
       denied()
     }
     
-    onMove?.(toHookApi(handlerApi))
+    onMove?.(toHookApi(effectApi))
   }
 
-  function recognize ({ getMetadata, recognized }: RecognizeableHandlerApi<TouchEvent>) {
-    if (getMetadata({ path: 'distance.straight.fromStart' }) >= minDistance) {
+  function recognize (effectApi: RecognizeableEffectApi<'touchmove', TouchdragMetadata>) {
+    const { getMetadata, recognized } = effectApi,
+          metadata = getMetadata()
+
+    if (metadata.distance.straight.fromStart >= minDistance) {
       recognized()
     }
   }
 
-  function touchcancel (handlerApi: RecognizeableHandlerApi<TouchEvent>) {
-    const { denied } = handlerApi
+  function touchcancel (effectApi: RecognizeableEffectApi<'touchcancel', TouchdragMetadata>) {
+    const { denied } = effectApi
 
     denied()
 
-    onCancel?.(toHookApi(handlerApi))
+    onCancel?.(toHookApi(effectApi))
   }
 
-  function touchend (handlerApi: RecognizeableHandlerApi<TouchEvent>) {
-    const { denied } = handlerApi
+  function touchend (effectApi: RecognizeableEffectApi<'touchend', TouchdragMetadata>) {
+    const { denied } = effectApi
 
     denied()
 
-    onEnd?.(toHookApi(handlerApi))
+    onEnd?.(toHookApi(effectApi))
   }
   
-  return {
-    touchstart,
-    touchmove,
-    touchcancel,
-    touchend,
-  }
+  return defineEffect => [
+    defineEffect('touchstart', touchstart),
+    defineEffect('touchmove', touchmove),
+    defineEffect('touchcancel', touchcancel),
+    defineEffect('touchend', touchend),
+  ]
 }

@@ -1,23 +1,27 @@
 import { suite as createSuite } from 'uvu'
 import * as assert from 'uvu/assert'
-import { withPuppeteer } from '@baleada/prepare'
+import { withPlaywright } from '@baleada/prepare'
+import { WithGlobals } from '../fixtures/types'
+import type {
+  KonamiTypes,
+  KonamiMetadata,
+  KonamiOptions,
+  KonamiHook,
+  KonamiHookApi
+} from '../../src'
 
-const suite = withPuppeteer(
-  createSuite('konami (browser)')
+const suite = withPlaywright(
+  createSuite('konami')
 )
 
-suite.before.each(async ({ puppeteer: { page } }) => {
-  await page.goto('http://localhost:3000')
-})
-
-suite(`recognizes Konami code`, async ({ puppeteer: { page } }) => {
+suite(`recognizes Konami code`, async ({ playwright: { page, reloadNext } }) => {
   await page.evaluate(async () => {
-    const listenable = new (window as any).Listenable(
-      'recognizeable', 
-      { recognizeable: { handlers: (window as any).recognizeableHandlers.konami() } }
+    const listenable = new (window as unknown as WithGlobals).Listenable<KonamiTypes, KonamiMetadata>(
+      'recognizeable' as KonamiTypes, 
+      { recognizeable: { effects: (window as unknown as WithGlobals).effects.konami() } }
     );
 
-    (window as any).TEST = { listenable: listenable.listen(() => {}) }
+    (window as unknown as WithGlobals).testState = { listenable: listenable.listen(() => {}) }
   })
 
   await page.keyboard.press('ArrowUp')
@@ -31,10 +35,12 @@ suite(`recognizes Konami code`, async ({ puppeteer: { page } }) => {
   await page.keyboard.press('B')
   await page.keyboard.press('A')
   
-  const value = await page.evaluate(() => (window as any).TEST.listenable.recognizeable.status),
+  const value = await page.evaluate(() => (window as unknown as WithGlobals).testState.listenable.recognizeable.status),
         expected = 'recognized'
 
   assert.is(value, expected)
+
+  reloadNext()
 })
 
 

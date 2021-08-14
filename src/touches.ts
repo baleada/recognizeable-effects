@@ -1,6 +1,6 @@
-import { toHookApi, naiveDeepClone, toTouchMovePoint, toTouchEndPoint } from './util'
-import type { HookApi } from './util'
-import type { RecognizeableHandlerApi } from '@baleada/logic'
+import { toHookApi, toCloned, toTouchMovePoint, toPolarCoordinates } from './extracted'
+import type { HookApi, PointerStartMetadata } from './extracted'
+import type { RecognizeableEffectApi, RecognizeableOptions } from '@baleada/logic'
 
 /*
  * touches is defined as a single touch that:
@@ -10,6 +10,21 @@ import type { RecognizeableHandlerApi } from '@baleada/logic'
  * - ends
  * - repeats 1 time (or a minimum number of your choice), with each tap ending less than or equal to 500ms (or a maximum interval of your choice) after the previous tap ended
  */
+
+export type TouchesTypes = 'touchstart' | 'touchcancel' | 'touchmove' | 'touchend'
+
+export type TouchesMetadata = {
+  touchTotal: number,
+  lastTouch: Touch,
+  touches: Touch[]
+}
+
+type Touch = {
+  times: PointerStartMetadata['times'],
+  points: PointerStartMetadata['points'], 
+  distance: number,
+  interval: number
+}
 
 export type TouchesOptions = {
   minTouches?: number,
@@ -23,7 +38,7 @@ export type TouchesOptions = {
 
 export type TouchesHook = (api: TouchesHookApi) => any
 
-export type TouchesHookApi = HookApi<TouchEvent>
+export type TouchesHookApi = HookApi<TouchesTypes, TouchesMetadata>
 
 const defaultOptions = {
   minTouches: 1,
@@ -31,93 +46,116 @@ const defaultOptions = {
   maxDistance: 5, // TODO: research appropriate/accessible minDistance
 }
 
-export function touches (options: TouchesOptions = {}) {
+const initialTouch: Touch = {
+  times: {
+    start: 0,
+    end: 0
+  },
+  points: {
+    start: { x: 0, y: 0 },
+    end: { x: 0, y: 0 }
+  },
+  distance: 0,
+  interval: 0
+}
+
+export function touches (options: TouchesOptions = {}): RecognizeableOptions<TouchesTypes, TouchesMetadata>['effects'] {
   const { onStart, onMove, onCancel, onEnd } = options,
         minTouches = options.minTouches ?? defaultOptions.minTouches,
         maxInterval = options.maxInterval ?? defaultOptions.maxInterval,
         maxDistance = options.maxDistance ?? defaultOptions.maxDistance
 
-  function touchstart (handlerApi: RecognizeableHandlerApi<TouchEvent>) {
-    const { event, setMetadata } = handlerApi
+  function touchstart (effectApi: RecognizeableEffectApi<'touchstart', TouchesMetadata>) {
+    const { sequenceItem: event, getMetadata } = effectApi,
+          metadata = getMetadata()
     
-    setMetadata({ path: 'touchTotal', value: event.touches.length })
-    setMetadata({ path: 'lastTap.times.start', value: event.timeStamp })
+    metadata.touchTotal = event.touches.length
 
-    setMetadata({ path: 'lastTap.points.start', value: toTouchMovePoint(event) })
+    if (!metadata.lastTouch) {
+      metadata.lastTouch = toCloned(initialTouch)
+    }
+    
+    metadata.lastTouch.times.start = event.timeStamp
+    metadata.lastTouch.points.start = toTouchMovePoint(event)
 
-    onStart?.(toHookApi(handlerApi))
+    onStart?.(toHookApi(effectApi))
   }
 
-  function touchmove (handlerApi: RecognizeableHandlerApi<TouchEvent>) {
-    onMove?.(toHookApi(handlerApi))
+  function touchmove (effectApi: RecognizeableEffectApi<'touchmove', TouchesMetadata>) {
+    onMove?.(toHookApi(effectApi))
   }
 
-  function touchcancel (handlerApi: RecognizeableHandlerApi<TouchEvent>) {
-    const { getMetadata, setMetadata, denied } = handlerApi
+  function touchcancel (effectApi: RecognizeableEffectApi<'touchcancel', TouchesMetadata>) {
+    const { getMetadata, denied } = effectApi,
+          metadata = getMetadata()
 
-    if (getMetadata({ path: 'touchTotal' }) === 1) {
+    if (metadata.touchTotal === 1) {
       denied()
-      setMetadata({ path: 'touchTotal', value: getMetadata({ path: 'touchTotal' }) - 1 }) // TODO: is there a way to un-cancel a touch without triggering a touch start? If so, this touch total calc would be wrong.
+      metadata.touchTotal = metadata.touchTotal - 1 // TODO: is there a way to un-cancel a touch without triggering a touch start? If so, this touch total calc would be wrong.
     }
 
-    onCancel?.(toHookApi(handlerApi))
+    onCancel?.(toHookApi(effectApi))
   }
 
-  function touchend (handlerApi: RecognizeableHandlerApi<TouchEvent>) {
-    const { event, getMetadata, toPolarCoordinates, setMetadata, pushMetadata, denied } = handlerApi
+  function touchend (effectApi: RecognizeableEffectApi<'touchend', TouchesMetadata>) {
+    const { sequenceItem: event, getMetadata, denied } = effectApi,
+          metadata = getMetadata()
 
-    setMetadata({ path: 'touchTotal', value: getMetadata({ path: 'touchTotal' }) - 1 })
+    metadata.touchTotal = metadata.touchTotal - 1
 
-    if (getMetadata({ path: 'touchTotal' }) === 0) {
-      const { x: xA, y: yA } = getMetadata({ path: 'lastTap.points.start' }),
+    if (metadata.touchTotal === 0) {
+      const { x: xA, y: yA } = metadata.lastTouch.points.start,
             { clientX: xB, clientY: yB } = event.changedTouches.item(0),
             { distance } = toPolarCoordinates({ xA, xB, yA, yB }),
             endPoint = { x: xB, y: yB },
             endTime = event.timeStamp
 
-      setMetadata({ path: 'lastTap.points.end', value: endPoint })
-      setMetadata({ path: 'lastTap.times.end', value: endTime })
-      setMetadata({ path: 'lastTap.distance', value: distance })
+      metadata.lastTouch.points.end = endPoint
+      metadata.lastTouch.times.end = endTime
+      metadata.lastTouch.distance = distance
 
-      if (!Array.isArray(getMetadata({ path: 'taps' }))) {
-        setMetadata({ path: 'taps', value: [] })
+      if (!metadata.touches) {
+        metadata.touches = []
       }
-      const interval = getMetadata({ path: 'taps.length' }) === 0
+      
+      const interval = metadata.touches.length === 0
         ? 0
-        : endTime - getMetadata({ path: 'taps.last.times.end' })
-      setMetadata({ path: 'lastClick.interval', value: interval })
+        : endTime - metadata.touches[metadata.touches.length - 1].times.end
+      metadata.lastTouch.interval = interval
 
-      const newTap = naiveDeepClone(getMetadata({ path: 'lastTap' }))
-      pushMetadata({ path: 'taps', value: newTap })
+      const newTap = toCloned(metadata.lastTouch)
+      metadata.touches.push(newTap)
 
-      recognize(handlerApi)
+      recognize(effectApi)
     } else {
       denied()
     }
 
-    onEnd?.(toHookApi(handlerApi))
+    onEnd?.(toHookApi(effectApi))
   }
 
-  function recognize ({ getMetadata, setMetadata, pushMetadata, denied, recognized }: RecognizeableHandlerApi<TouchEvent>) {
+  function recognize (effectApi: RecognizeableEffectApi<'touchend', TouchesMetadata>) {
+    const { getMetadata, denied, recognized } = effectApi,
+          metadata = getMetadata()
+
     switch (true) {
-    case getMetadata({ path: 'lastTap.interval' }) > maxInterval || getMetadata({ path: 'lastTap.distance' }) > maxDistance: // Deny after multiple touches and after taps with intervals or movement distances that are too large
-      const lastTap = naiveDeepClone(getMetadata({ path: 'lastTap' }))
-      denied()
-      setMetadata({ path: 'taps', value: [] })
-      pushMetadata({ path: 'taps', value: lastTap })
-      break
-    default:
-      if (getMetadata({ path: 'taps.length' }) >= minTouches) {
-        recognized()
+      case metadata.lastTouch.interval > maxInterval || metadata.lastTouch.distance > maxDistance: // Deny after multiple touches and after touches with intervals or movement distances that are too large
+        const lastTouch = toCloned(metadata.lastTouch)
+        denied()
+        metadata.touches = [lastTouch]
+        break
+      default:
+        if (metadata.touches.length >= minTouches) {
+          recognized()
+        }
+        break
       }
-      break
-    }
   }
   
-  return {
-    touchstart,
-    touchmove,
-    touchcancel,
-    touchend,
-  }
+  return defineEffect => [
+    defineEffect('touchstart', touchstart),
+    defineEffect('touchmove', touchmove),
+    defineEffect('touchcancel', touchcancel),
+    defineEffect('touchend', touchend),
+  ]
 }

@@ -1,7 +1,18 @@
 import { eventMatchesKeycombo, ensureKeycombo, ListenableKeycomboItem } from '@baleada/logic'
-import type { RecognizeableHandlerApi } from "@baleada/logic"
-import { toHookApi } from './util'
-import type { HookApi } from './util'
+import type { RecognizeableEffectApi } from "@baleada/logic"
+import {
+  join as lazyCollectionJoin,
+  map as lazyCollectionMap,
+  pipe as lazyCollectionPipe,
+} from 'lazy-collections'
+import { toHookApi } from './extracted'
+import type { HookApi } from './extracted'
+
+export type KeychordTypes = 'keydown'
+
+export type KeychordMetadata = {
+  keycombos: KeycomboMetadata[]
+}
 
 export type KeychordOptions = {
   maxInterval?: number,
@@ -11,11 +22,7 @@ export type KeychordOptions = {
 
 export type KeychordHook = (api: KeychordHookApi) => any
 
-export type KeychordHookApi = HookApi<KeyboardEvent>
-
-export type KeychordMetadata = {
-  keycombos: KeycomboMetadata[]
-}
+export type KeychordHookApi = HookApi<KeychordTypes, KeychordMetadata>
 
 type KeycomboMetadata = {
   name: string,
@@ -27,27 +34,28 @@ const defaultOptions: KeychordOptions = {
   preventsDefaultUnlessDenied: true,
 }
 
-/**
- * @link https://baleada.dev/docs/recognizeable-handlers/keychord
- */
 export function keychord (keycombos: string, options: KeychordOptions = {}) {
   const ensuredKeycombos = keycombos.split(' ').map(ensureKeycombo),
         { maxInterval, preventsDefaultUnlessDenied, onDown } = { ...defaultOptions, ...options },
-        cache = {
+        cache: {
+          currentKeycomboIndex: number,
+          lastTimeStamp: number,
+          wasRecognized: boolean
+        } = {
           currentKeycomboIndex: 0,
           lastTimeStamp: 0,
           wasRecognized: false,
         }
 
-  function keydown (handlerApi: RecognizeableHandlerApi<KeyboardEvent>) {
+  function keydown (effectApi: RecognizeableEffectApi<'keydown', KeychordMetadata>) {
     if (cache.wasRecognized) {
-      cleanup(handlerApi)
+      cleanup(effectApi)
     }
 
-    const { event, denied, pushMetadata, getStatus } = handlerApi
+    const { sequenceItem: event, denied, getStatus } = effectApi
     
-    if (event.timeStamp - cache.lastTimeStamp > maxInterval) {
-      cleanup(handlerApi)
+    if (cache.lastTimeStamp === 0 || event.timeStamp - cache.lastTimeStamp > maxInterval) {
+      cleanup(effectApi)
     }
 
     cache.lastTimeStamp = event.timeStamp
@@ -56,33 +64,35 @@ export function keychord (keycombos: string, options: KeychordOptions = {}) {
 
     if (!eventMatchesKeycombo({ event, keycombo })) {
       denied()
-      cleanup(handlerApi)
-      onDown?.(toHookApi(handlerApi))
+      cleanup(effectApi)
+      onDown?.(toHookApi(effectApi))
       return
     }
 
-    pushMetadata({
-      path: 'keycombos',
-      value: {
-        time: event.timeStamp,
-        name: toName(keycombo)
-      }
+    const { getMetadata } = effectApi,
+          metadata = getMetadata()
+
+    metadata.keycombos.push({
+      time: event.timeStamp,
+      name: toName(keycombo)
     })
 
-    recognize(handlerApi)
+    recognize(effectApi)
 
     if (preventsDefaultUnlessDenied) {
-      if (['recognizing', 'recognized'].includes(getStatus())) {
+      const status = getStatus()
+
+      if (status === 'recognizing' || status === 'recognized') {
         event.preventDefault()
       }
     }
 
-    onDown?.(toHookApi(handlerApi))
+    onDown?.(toHookApi(effectApi))
   }
 
-  function recognize (handlerApi: RecognizeableHandlerApi<KeyboardEvent>) {
-    const { recognized, getMetadata, } = handlerApi,
-          metadata: KeychordMetadata = getMetadata()
+  function recognize (effectApi: RecognizeableEffectApi<'keydown', KeychordMetadata>) {
+    const { recognized, getMetadata, } = effectApi,
+          metadata = getMetadata()
 
     // Wait for more keycombos if necessary.
     if (metadata.keycombos.length < ensuredKeycombos.length) {
@@ -96,17 +106,25 @@ export function keychord (keycombos: string, options: KeychordOptions = {}) {
     cache.wasRecognized = true
   }
 
-  function cleanup (handlerApi: RecognizeableHandlerApi<KeyboardEvent>) {
-    handlerApi.setMetadata({ path: 'keycombos', value: [] })
+  function cleanup (effectApi: RecognizeableEffectApi<'keydown', KeychordMetadata>) {
+    const metadata = effectApi.getMetadata()
+
+    metadata.keycombos = []
+
     cache.currentKeycomboIndex = 0
     cache.wasRecognized = false
   }
 
-  return {
-    keydown,
-  }
+  return defineEffect => [
+    defineEffect('keydown', keydown),
+  ]
 }
 
-function toName (keycombo: ListenableKeycomboItem[]) {
-  return keycombo.map(({ name }) => name).join('+')
+const toJoinedKeycombo = lazyCollectionPipe(
+  lazyCollectionMap(({ name }) => name),
+  lazyCollectionJoin('+')
+)
+
+function toName (keycombo: ListenableKeycomboItem[]): string {
+  return toJoinedKeycombo(keycombo)
 }

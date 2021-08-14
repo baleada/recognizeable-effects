@@ -1,8 +1,7 @@
 {
-  "name": "@baleada/recognizeable-handlers",
-  "version": "0.6.0",
-  "description": "A collection of event handlers that are compatible with Baleada Logic's Recognizeable class.",
-  "type": "module",
+  "name": "@baleada/recognizeable-effects",
+  "version": "0.7.0",
+  "description": "A collection of event side effects that are compatible with Baleada Logic's Recognizeable class.",
   "module": "lib/index.js",
   "types": "lib/index.d.ts",
   "exports": {
@@ -10,17 +9,17 @@
   },
   "scripts": {
     "prepare": "tsc && rollup --config rollup.config.ts",
-    "test:only": "run() { uvu -r ts-node/register tests/$2 $1.test.ts$; }; run",
+    "test:only": "run() { uvu -r esbuild-register tests/$2 $1.test.ts$; }; run",
     "test": "npm run test:only .",
     "dev": "vite"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/baleada/recognizeable-handlers.git"
+    "url": "git+https://github.com/baleada/recognizeable-effects.git"
   },
   "keywords": [
     "baleada",
-    "recognizeable handlers",
+    "recognizeable effects",
     "clicks",
     "double click",
     "drag",
@@ -41,17 +40,21 @@
   },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/baleada/recognizeable-handlers/issues"
+    "url": "https://github.com/baleada/recognizeable-effects/issues"
   },
   "homepage": "https://baleada.netlify.com",
   "devDependencies": {
-    "@baleada/logic": "^0.19.9",
-    "@baleada/prepare": "^0.5.2",
-    "rollup": "^2.46.0",
-    "ts-node": "^9.1.1",
-    "typescript": "^4.2.4",
+    "@baleada/logic": "^0.20.4",
+    "@baleada/prepare": "^0.5.11",
+    "esbuild": "^0.12.20",
+    "esbuild-register": "^2.6.0",
+    "rollup": "^2.56.2",
+    "typescript": "^4.3.5",
     "uvu": "^0.5.1",
-    "vite": "^2.2.3"
+    "vite": "^2.4.1"
   },
-  "sideEffects": false
+  "sideEffects": false,
+  "dependencies": {
+    "lazy-collections": "^0.8.0"
+  }
 }
