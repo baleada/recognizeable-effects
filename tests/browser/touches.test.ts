@@ -15,7 +15,7 @@ const suite = withPlaywright(
   createSuite('touches')
 )
 
-suite(`recognizes touches`, async ({ playwright: { page, reloadNext } }) => {
+suite.skip(`recognizes touches`, async ({ playwright: { page, reloadNext } }) => {
   await page.evaluate(async () => {
     const listenable = new (window as unknown as WithGlobals).Listenable<TouchesTypes, TouchesMetadata>(
       'recognizeable' as TouchesTypes, 
@@ -25,13 +25,19 @@ suite(`recognizes touches`, async ({ playwright: { page, reloadNext } }) => {
     (window as unknown as WithGlobals).testState = { listenable: listenable.listen(() => {}, { target: document.body }) }
 
     const touchstart = new (window as unknown as WithGlobals).Dispatchable('touchstart'),
-          touchmove = new (window as unknown as WithGlobals).Dispatchable('touchmove'),
-          touchcancel = new (window as unknown as WithGlobals).Dispatchable('touchcancel'),
-          touchend = new (window as unknown as WithGlobals).Dispatchable('touchend'),
-          touch = new Touch({ identifier: 1, target: document.body })
+          touchend = new (window as unknown as WithGlobals).Dispatchable('touchend')
 
-    touchstart.dispatch({ target: document.body, init: { touches: [touch] } })
-    touchend.dispatch({ target: document.body, init: { touches: [touch] } })
+    touchstart.dispatch({
+      target: document.body,
+      init: {
+        touches: [
+          new Touch({ identifier: 1, target: document.body })
+        ]
+      }
+    })
+    
+    // Not sure how to properyl init touchend with changedTouches
+    touchend.dispatch()
   })
   
   const value = await page.evaluate(() => ((window as unknown as WithGlobals).testState.listenable as Listenable<TouchesTypes, TouchesMetadata>).recognizeable.status),
