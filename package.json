@@ -44,7 +44,7 @@
   },
   "homepage": "https://baleada.netlify.com",
   "devDependencies": {
-    "@baleada/logic": "^0.20.5",
+    "@baleada/logic": "^0.20.6",
     "@baleada/prepare": "^0.5.11",
     "esbuild": "^0.12.20",
     "esbuild-register": "^2.6.0",
