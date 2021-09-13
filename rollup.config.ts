@@ -8,7 +8,7 @@ const external = [
         .delete({ targets: 'lib/*' })
         .input('src/index.ts')
         .external(external)
-        .typescript()
+        .esbuild()
         .resolve()
         .esm({ file: 'lib/index.js', target: 'browser' })
         .analyzer()
