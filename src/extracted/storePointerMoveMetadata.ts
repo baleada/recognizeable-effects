@@ -6,6 +6,7 @@ import { toPolarCoordinates } from './toPolarCoordinates'
 import type { PolarCoordinates } from './toPolarCoordinates'
 import type { PointerStartMetadata } from './storePointerStartMetadata'
 import { toCloned } from './toCloned'
+import { toTouchEndPoint } from '.'
 
 export type PointerMoveMetadata = {
   distance: {
@@ -77,7 +78,11 @@ export function storePointerMoveMetadata<Type extends 'mousemove' | 'mouseup' | 
           }
 
           if (event instanceof TouchEvent) {
-            return toTouchMovePoint(event)
+            if (event.type === 'touchmove') {
+              return toTouchMovePoint(event)
+            }
+
+            return toTouchEndPoint(event)
           }
         })(),
         { distance: distanceFromPrevious, angle: angleFromPrevious } = toPolarCoordinates({
