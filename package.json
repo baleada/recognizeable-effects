@@ -1,6 +1,6 @@
 {
   "name": "@baleada/recognizeable-effects",
-  "version": "0.7.2",
+  "version": "0.8.0",
   "description": "A collection of event side effects that are compatible with Baleada Logic's Recognizeable class.",
   "module": "lib/index.js",
   "types": "lib/index.d.ts",
