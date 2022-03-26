@@ -1,6 +1,6 @@
 import { toHookApi, toCloned, toTouchMovePoint, toPolarCoordinates } from './extracted'
 import type { HookApi, PointerStartMetadata } from './extracted'
-import type { RecognizeableEffectApi, RecognizeableOptions } from '@baleada/logic'
+import type { RecognizeableEffect, RecognizeableOptions } from '@baleada/logic'
 
 /*
  * touches is defined as a single touch that:
@@ -65,8 +65,8 @@ export function touches (options: TouchesOptions = {}): RecognizeableOptions<Tou
         maxInterval = options.maxInterval ?? defaultOptions.maxInterval,
         maxDistance = options.maxDistance ?? defaultOptions.maxDistance
 
-  function touchstart (effectApi: RecognizeableEffectApi<'touchstart', TouchesMetadata>) {
-    const { sequenceItem: event, getMetadata } = effectApi,
+  const touchstart: RecognizeableEffect<'touchstart', TouchesMetadata> = (event, api) => {
+    const { getMetadata } = api,
           metadata = getMetadata()
     
     metadata.touchTotal = event.touches.length
@@ -78,15 +78,15 @@ export function touches (options: TouchesOptions = {}): RecognizeableOptions<Tou
     metadata.lastTouch.times.start = event.timeStamp
     metadata.lastTouch.points.start = toTouchMovePoint(event)
 
-    onStart?.(toHookApi(effectApi))
+    onStart?.(toHookApi(api))
   }
 
-  function touchmove (effectApi: RecognizeableEffectApi<'touchmove', TouchesMetadata>) {
-    onMove?.(toHookApi(effectApi))
+  const touchmove: RecognizeableEffect<'touchmove', TouchesMetadata> = (event, api) => {
+    onMove?.(toHookApi(api))
   }
 
-  function touchcancel (effectApi: RecognizeableEffectApi<'touchcancel', TouchesMetadata>) {
-    const { getMetadata, denied } = effectApi,
+  const touchcancel: RecognizeableEffect<'touchcancel', TouchesMetadata> = (event, api) => {
+    const { getMetadata, denied } = api,
           metadata = getMetadata()
 
     if (metadata.touchTotal === 1) {
@@ -94,11 +94,11 @@ export function touches (options: TouchesOptions = {}): RecognizeableOptions<Tou
       metadata.touchTotal = metadata.touchTotal - 1 // TODO: is there a way to un-cancel a touch without triggering a touch start? If so, this touch total calc would be wrong.
     }
 
-    onCancel?.(toHookApi(effectApi))
+    onCancel?.(toHookApi(api))
   }
 
-  function touchend (effectApi: RecognizeableEffectApi<'touchend', TouchesMetadata>) {
-    const { sequenceItem: event, getMetadata, denied } = effectApi,
+  const touchend: RecognizeableEffect<'touchend', TouchesMetadata> = (event, api) => {
+    const { getMetadata, denied } = api,
           metadata = getMetadata()
 
     metadata.touchTotal = metadata.touchTotal - 1
@@ -126,16 +126,16 @@ export function touches (options: TouchesOptions = {}): RecognizeableOptions<Tou
       const newTap = toCloned(metadata.lastTouch)
       metadata.touches.push(newTap)
 
-      recognize(effectApi)
+      recognize(event, api)
     } else {
       denied()
     }
 
-    onEnd?.(toHookApi(effectApi))
+    onEnd?.(toHookApi(api))
   }
 
-  function recognize (effectApi: RecognizeableEffectApi<'touchend', TouchesMetadata>) {
-    const { getMetadata, denied, recognized } = effectApi,
+  const recognize: RecognizeableEffect<'touchend', TouchesMetadata> = (event, api) => {
+    const { getMetadata, denied, recognized } = api,
           metadata = getMetadata()
 
     switch (true) {
@@ -152,10 +152,5 @@ export function touches (options: TouchesOptions = {}): RecognizeableOptions<Tou
       }
   }
   
-  return defineEffect => [
-    defineEffect('touchstart', touchstart),
-    defineEffect('touchmove', touchmove),
-    defineEffect('touchcancel', touchcancel),
-    defineEffect('touchend', touchend),
-  ]
+  return { touchstart, touchmove, touchcancel, touchend }
 }

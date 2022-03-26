@@ -41,13 +41,13 @@ import type {
   KonamiHook,
   KonamiHookApi
 } from '../../../../src'
-import { Listenable, Recognizeable, Dispatchable } from '@baleada/logic'
+import { Listenable, Recognizeable } from '@baleada/logic'
 import { WithGlobals } from '../../../fixtures/types';
 
 (window as unknown as WithGlobals).effects = effects;
 (window as unknown as WithGlobals).Recognizeable = Recognizeable;
 (window as unknown as WithGlobals).Listenable = Listenable;
-(window as unknown as WithGlobals).Dispatchable = Dispatchable;
+(window as unknown as WithGlobals);
 
 const listenable = new (window as unknown as WithGlobals).Listenable<TouchdragdropTypes, TouchdragdropMetadata>(
   'recognizeable' as TouchdragdropTypes, 
@@ -61,3 +61,29 @@ const listenable = new (window as unknown as WithGlobals).Listenable<Touchdragdr
 (window as unknown as WithGlobals).testState = {
   listenable: listenable.listen(() => console.log(listenable.recognizeable.metadata))
 }
+
+// const listenable = new (window as unknown as WithGlobals).Listenable<TouchdragTypes, TouchdragMetadata>(
+//   'recognizeable' as TouchdragTypes, 
+//   {
+//     recognizeable: {
+//       effects: (window as unknown as WithGlobals).effects.touchdrag()
+//     }
+//   }
+// );
+
+// (window as unknown as WithGlobals).testState = {
+//   listenable: listenable.listen(() => console.log(listenable.recognizeable.metadata))
+// }
+
+// const listenable = new (window as unknown as WithGlobals).Listenable<TouchesTypes, TouchesMetadata>(
+//   'recognizeable' as TouchesTypes, 
+//   {
+//     recognizeable: {
+//       effects: (window as unknown as WithGlobals).effects.touches()
+//     }
+//   }
+// );
+
+// (window as unknown as WithGlobals).testState = {
+//   listenable: listenable.listen(() => console.log(listenable.recognizeable.metadata))
+// }

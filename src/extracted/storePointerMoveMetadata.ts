@@ -1,4 +1,4 @@
-import type { RecognizeableEffectApi } from '@baleada/logic'
+import type { RecognizeableEffect } from '@baleada/logic'
 import { toDirection } from './toDirection'
 import type { Direction } from './toDirection'
 import { toMousePoint, toTouchMovePoint } from './toPoints'
@@ -60,8 +60,8 @@ const initialMetadata: PointerMoveMetadata = {
   }
 }
 
-export function storePointerMoveMetadata<Type extends 'mousemove' | 'mouseup' | 'touchmove' | 'touchend', Metadata extends PointerMoveMetadata & PointerStartMetadata> (effectApi: RecognizeableEffectApi<Type, Metadata>): void {
-  const { sequenceItem: event, getMetadata } = effectApi,
+export function storePointerMoveMetadata<Type extends 'mousemove' | 'mouseup' | 'touchmove' | 'touchend', Metadata extends PointerMoveMetadata & PointerStartMetadata> (api: Parameters<RecognizeableEffect<Type, Metadata>>[1]): void {
+  const { getMetadata } = api,
         metadata = getMetadata()
 
   if (!metadata.distance) {

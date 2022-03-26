@@ -1,4 +1,4 @@
-import type { ListenEffectParam, RecognizeableEffectApi, RecognizeableOptions } from '@baleada/logic'
+import type { ListenEffectParam, RecognizeableEffect, RecognizeableOptions } from '@baleada/logic'
 import { toHookApi, storePointerStartMetadata, storePointerMoveMetadata } from './extracted'
 import type { HookApi, PointerMoveMetadata, PointerStartMetadata } from './extracted'
 
@@ -41,28 +41,29 @@ export function mousedragdrop (options: MousedragdropOptions = {}): Recognizeabl
         minVelocity = options.minVelocity ?? defaultOptions.minVelocity,
         cache: { mousemoveEffect?: (event: ListenEffectParam<'mousemove'>) => void } = {}
 
-  function mousedown (effectApi: RecognizeableEffectApi<'mousedown', MousedragdropMetadata>) {
-    const { sequenceItem: event, getMetadata } = effectApi,
+  const mousedown: RecognizeableEffect<'mousedown', MousedragdropMetadata> = (event, api) => {
+    const { getMetadata } = api,
           metadata = getMetadata()
 
     metadata.mouseStatus = 'down'
-    storePointerStartMetadata(effectApi)
+    storePointerStartMetadata(api)
 
     const { target } = event
-    cache.mousemoveEffect = event => mousemove({ ...effectApi, sequenceItem: event })
+    cache.mousemoveEffect = event => mousemove(event, api)
     target.addEventListener('mousemove', cache.mousemoveEffect)
     
-    onDown?.(toHookApi(effectApi))
+    onDown?.(toHookApi(api))
   }
 
-  function mousemove (effectApi: RecognizeableEffectApi<'mousemove', MousedragdropMetadata>) {
-    storePointerMoveMetadata(effectApi)
+  const mousemove: RecognizeableEffect<'mousemove', MousedragdropMetadata> = (event, api) => {
+    storePointerMoveMetadata(api)
 
-    onMove?.(toHookApi(effectApi))
+    onMove?.(toHookApi(api))
   }
 
-  function mouseleave (effectApi: RecognizeableEffectApi<'mouseleave', MousedragdropMetadata>) {
-    const { getMetadata, denied, sequenceItem: { target } } = effectApi,
+  const mouseleave: RecognizeableEffect<'mouseleave', MousedragdropMetadata> = (event, api) => {
+    const { target } = event,
+          { getMetadata, denied } = api,
           metadata = getMetadata()
 
     if (metadata.mouseStatus === 'down') {
@@ -71,25 +72,26 @@ export function mousedragdrop (options: MousedragdropOptions = {}): Recognizeabl
       target.removeEventListener('mousemove', cache.mousemoveEffect)
     }
 
-    onLeave?.(toHookApi(effectApi))
+    onLeave?.(toHookApi(api))
   }
 
-  function mouseup (effectApi: RecognizeableEffectApi<'mouseup', MousedragdropMetadata>) {
-    const { getMetadata, sequenceItem: { target } } = effectApi,
+  const mouseup: RecognizeableEffect<'mouseup', MousedragdropMetadata> = (event, api) => {
+    const { target } = event,
+          { getMetadata } = api,
           metadata = getMetadata()
 
     metadata.mouseStatus = 'up'
-    storePointerMoveMetadata(effectApi)
+    storePointerMoveMetadata(api)
 
-    recognize(effectApi)
+    recognize(event, api)
 
     target.removeEventListener('mousemove', cache.mousemoveEffect)
 
-    onUp?.(toHookApi(effectApi))
+    onUp?.(toHookApi(api))
   }
 
-  function recognize (effectApi: RecognizeableEffectApi<'mouseup', MousedragdropMetadata>) {
-    const { getMetadata, recognized, denied } = effectApi,
+  const recognize: RecognizeableEffect<'mouseup', MousedragdropMetadata> = (event, api) => {
+    const { getMetadata, recognized, denied } = api,
           metadata = getMetadata()
     
     if (metadata.distance.straight.fromStart >= minDistance && metadata.velocity >= minVelocity) {
@@ -99,9 +101,5 @@ export function mousedragdrop (options: MousedragdropOptions = {}): Recognizeabl
     }
   }
 
-  return defineEffect => [
-    defineEffect('mousedown', mousedown),
-    defineEffect('mouseleave', mouseleave),
-    defineEffect('mouseup', mouseup),
-  ]
+  return { mousedown, mouseleave, mouseup }
 }

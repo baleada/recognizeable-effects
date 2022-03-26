@@ -1,4 +1,4 @@
-import type { RecognizeableEffectApi, RecognizeableOptions } from '@baleada/logic'
+import type { RecognizeableEffect, RecognizeableOptions } from '@baleada/logic'
 import { toHookApi, storePointerStartMetadata, storePointerMoveMetadata } from './extracted'
 import type { HookApi, PointerStartMetadata, PointerMoveMetadata } from './extracted'
 
@@ -35,32 +35,32 @@ export function touchdrag (options: TouchdragOptions = {}): RecognizeableOptions
   const { onStart, onMove, onCancel, onEnd } = options,
         minDistance = options.minDistance ?? defaultOptions.minDistance
 
-  function touchstart (effectApi: RecognizeableEffectApi<'touchstart', TouchdragMetadata>) {
-    const { sequenceItem: event, getMetadata } = effectApi,
+  const touchstart: RecognizeableEffect<'touchstart', TouchdragMetadata> = (event, api) => {
+    const { getMetadata } = api,
           metadata = getMetadata()
     
     metadata.touchTotal = event.touches.length
-    storePointerStartMetadata(effectApi)
+    storePointerStartMetadata(api)
     
-    onStart?.(toHookApi(effectApi))
+    onStart?.(toHookApi(api))
   }
 
-  function touchmove (effectApi: RecognizeableEffectApi<'touchmove', TouchdragMetadata>) {
-    const { getMetadata, denied } = effectApi,
+  const touchmove: RecognizeableEffect<'touchmove', TouchdragMetadata> = (event, api) => {
+    const { getMetadata, denied } = api,
           metadata = getMetadata()
 
     if (metadata.touchTotal === 1) {
-      storePointerMoveMetadata(effectApi)
-      recognize(effectApi)
+      storePointerMoveMetadata(api)
+      recognize(event, api)
     } else {
       denied()
     }
     
-    onMove?.(toHookApi(effectApi))
+    onMove?.(toHookApi(api))
   }
 
-  function recognize (effectApi: RecognizeableEffectApi<'touchmove', TouchdragMetadata>) {
-    const { getMetadata, recognized } = effectApi,
+  const recognize: RecognizeableEffect<'touchmove', TouchdragMetadata> = (event, api) => {
+    const { getMetadata, recognized } = api,
           metadata = getMetadata()
 
     if (metadata.distance.straight.fromStart >= minDistance) {
@@ -68,26 +68,21 @@ export function touchdrag (options: TouchdragOptions = {}): RecognizeableOptions
     }
   }
 
-  function touchcancel (effectApi: RecognizeableEffectApi<'touchcancel', TouchdragMetadata>) {
-    const { denied } = effectApi
+  const touchcancel: RecognizeableEffect<'touchcancel', TouchdragMetadata> = (event, api) => {
+    const { denied } = api
 
     denied()
 
-    onCancel?.(toHookApi(effectApi))
+    onCancel?.(toHookApi(api))
   }
 
-  function touchend (effectApi: RecognizeableEffectApi<'touchend', TouchdragMetadata>) {
-    const { denied } = effectApi
+  const touchend: RecognizeableEffect<'touchend', TouchdragMetadata> = (event, api) => {
+    const { denied } = api
 
     denied()
 
-    onEnd?.(toHookApi(effectApi))
+    onEnd?.(toHookApi(api))
   }
   
-  return defineEffect => [
-    defineEffect('touchstart', touchstart),
-    defineEffect('touchmove', touchmove),
-    defineEffect('touchcancel', touchcancel),
-    defineEffect('touchend', touchend),
-  ]
+  return { touchstart, touchmove, touchcancel, touchend }
 }

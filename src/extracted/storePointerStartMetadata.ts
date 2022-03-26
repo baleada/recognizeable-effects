@@ -1,4 +1,4 @@
-import type { RecognizeableEffectApi } from '@baleada/logic'
+import type { RecognizeableEffect } from '@baleada/logic'
 import { toCloned } from './toCloned'
 import { toMousePoint, toTouchMovePoint } from './toPoints'
 
@@ -24,8 +24,8 @@ const initialMetadata: PointerStartMetadata = {
   }
 }
 
-export function storePointerStartMetadata<Type extends 'mousedown' | 'touchstart', Metadata extends PointerStartMetadata> (effectApi: RecognizeableEffectApi<Type, Metadata>): void {
-  const { sequenceItem: event, getMetadata } = effectApi,
+export function storePointerStartMetadata<Type extends 'mousedown' | 'touchstart', Metadata extends PointerStartMetadata> (api: Parameters<RecognizeableEffect<Type, Metadata>>[1]): void {
+  const { getMetadata } = api,
         metadata = getMetadata()
 
   if (!metadata.times) {
