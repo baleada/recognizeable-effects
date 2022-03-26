@@ -49,11 +49,11 @@ import { WithGlobals } from '../../../fixtures/types';
 (window as unknown as WithGlobals).Listenable = Listenable;
 (window as unknown as WithGlobals);
 
-const listenable = new (window as unknown as WithGlobals).Listenable<MousedragTypes, MousedragMetadata>(
-  'recognizeable' as MousedragTypes, 
+const listenable = new (window as unknown as WithGlobals).Listenable<TouchdragdropTypes, TouchdragdropMetadata>(
+  'recognizeable' as TouchdragdropTypes, 
   {
     recognizeable: {
-      effects: (window as unknown as WithGlobals).effects.mousedrag()
+      effects: (window as unknown as WithGlobals).effects.touchdragdrop()
     }
   }
 );
@@ -61,3 +61,29 @@ const listenable = new (window as unknown as WithGlobals).Listenable<MousedragTy
 (window as unknown as WithGlobals).testState = {
   listenable: listenable.listen(() => console.log(listenable.recognizeable.metadata))
 }
+
+// const listenable = new (window as unknown as WithGlobals).Listenable<TouchdragTypes, TouchdragMetadata>(
+//   'recognizeable' as TouchdragTypes, 
+//   {
+//     recognizeable: {
+//       effects: (window as unknown as WithGlobals).effects.touchdrag()
+//     }
+//   }
+// );
+
+// (window as unknown as WithGlobals).testState = {
+//   listenable: listenable.listen(() => console.log(listenable.recognizeable.metadata))
+// }
+
+// const listenable = new (window as unknown as WithGlobals).Listenable<TouchesTypes, TouchesMetadata>(
+//   'recognizeable' as TouchesTypes, 
+//   {
+//     recognizeable: {
+//       effects: (window as unknown as WithGlobals).effects.touches()
+//     }
+//   }
+// );
+
+// (window as unknown as WithGlobals).testState = {
+//   listenable: listenable.listen(() => console.log(listenable.recognizeable.metadata))
+// }
