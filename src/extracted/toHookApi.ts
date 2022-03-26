@@ -1,15 +1,13 @@
-import type { RecognizeableEffectApi, RecognizeableStatus, ListenableSupportedType, ListenEffectParam } from '@baleada/logic'
+import type { RecognizeableEffect, RecognizeableStatus, ListenableSupportedType, ListenEffectParam } from '@baleada/logic'
 
 export type HookApi<Type extends ListenableSupportedType, Metadata extends Record<any, any>> = {
-    sequenceItem: ListenEffectParam<Type>,
-    status: RecognizeableStatus,
-    metadata: Metadata,
-    sequence: ListenEffectParam<Type>[]
-  }
+  status: RecognizeableStatus,
+  metadata: Metadata,
+  sequence: ListenEffectParam<Type>[]
+}
 
-export function toHookApi<Type extends ListenableSupportedType, Metadata extends Record<any, any>> ({ sequenceItem, getSequence, getStatus, getMetadata }: RecognizeableEffectApi<Type, Metadata>): HookApi<Type, Metadata> {
+export function toHookApi<Type extends ListenableSupportedType, Metadata extends Record<any, any>> ({ getSequence, getStatus, getMetadata }: Parameters<RecognizeableEffect<Type, Metadata>>[1]): HookApi<Type, Metadata> {
   return {
-    sequenceItem,
     sequence: getSequence(),
     status: getStatus(),
     metadata: getMetadata()

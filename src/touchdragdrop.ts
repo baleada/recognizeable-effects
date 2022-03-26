@@ -1,4 +1,4 @@
-import type { RecognizeableEffectApi, RecognizeableOptions } from '@baleada/logic'
+import type { RecognizeableEffect, RecognizeableOptions } from '@baleada/logic'
 import { toHookApi, storePointerStartMetadata, storePointerMoveMetadata } from './extracted'
 import type { HookApi, PointerStartMetadata, PointerMoveMetadata } from './extracted'
 
@@ -40,51 +40,51 @@ export function touchdragdrop (options: TouchdragdropOptions = {}): Recognizeabl
         minDistance = options.minDistance ?? defaultOptions.minDistance,
         minVelocity = options.minVelocity ?? defaultOptions.minVelocity
 
-  function touchstart (effectApi: RecognizeableEffectApi<'touchstart', TouchdragdropMetadata>) {
-    const { sequenceItem: event, getMetadata } = effectApi,
+  const touchstart: RecognizeableEffect<'touchstart', TouchdragdropMetadata> = (event, api) => {
+    const { getMetadata } = api,
           metadata = getMetadata()
     
     metadata.touchTotal = event.touches.length
-    storePointerStartMetadata(effectApi)
+    storePointerStartMetadata(api)
     
-    onStart?.(toHookApi(effectApi))
+    onStart?.(toHookApi(api))
   }
 
-  function touchmove (effectApi: RecognizeableEffectApi<'touchmove', TouchdragdropMetadata>) {
-    const { getMetadata, denied } = effectApi,
+  const touchmove: RecognizeableEffect<'touchmove', TouchdragdropMetadata> = (event, api) => {
+    const { getMetadata, denied } = api,
           metadata = getMetadata()
 
     if (metadata.touchTotal === 1) {
-      storePointerMoveMetadata(effectApi)
+      storePointerMoveMetadata(api)
     } else {
       denied()
     }
     
-    onMove?.(toHookApi(effectApi))
+    onMove?.(toHookApi(api))
   }
 
-  function touchcancel (effectApi: RecognizeableEffectApi<'touchcancel', TouchdragdropMetadata>) {
-    const { denied } = effectApi
+  const touchcancel: RecognizeableEffect<'touchcancel', TouchdragdropMetadata> = (event, api) => {
+    const { denied } = api
 
     denied()
 
-    onCancel?.(toHookApi(effectApi))
+    onCancel?.(toHookApi(api))
   }
 
-  function touchend (effectApi: RecognizeableEffectApi<'touchend', TouchdragdropMetadata>) {
-    const { sequenceItem: event, getMetadata, setMetadata } = effectApi,
+  const touchend: RecognizeableEffect<'touchend', TouchdragdropMetadata> = (event, api) => {
+    const { getMetadata, setMetadata } = api,
           metadata = getMetadata()
 
     metadata.touchTotal = metadata.touchTotal - 1
-    storePointerMoveMetadata(effectApi)
+    storePointerMoveMetadata(api)
 
-    recognize(effectApi)
+    recognize(event, api)
 
-    onEnd?.(toHookApi(effectApi))
+    onEnd?.(toHookApi(api))
   }
 
-  function recognize (effectApi: RecognizeableEffectApi<'touchend', TouchdragdropMetadata>) {
-    const { getMetadata, recognized, denied } = effectApi,
+  const recognize: RecognizeableEffect<'touchend', TouchdragdropMetadata> = (event, api) => {
+    const { getMetadata, recognized, denied } = api,
           metadata = getMetadata()
 
     if (metadata.distance.straight.fromStart >= minDistance && metadata.velocity >= minVelocity) {
@@ -94,10 +94,5 @@ export function touchdragdrop (options: TouchdragdropOptions = {}): Recognizeabl
     }
   }
 
-  return defineEffect => [
-    defineEffect('touchstart', touchstart),
-    defineEffect('touchmove', touchmove),
-    defineEffect('touchcancel', touchcancel),
-    defineEffect('touchend', touchend),
-  ]
+  return { touchstart, touchmove, touchcancel, touchend }
 }

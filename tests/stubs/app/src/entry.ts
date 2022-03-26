@@ -41,19 +41,19 @@ import type {
   KonamiHook,
   KonamiHookApi
 } from '../../../../src'
-import { Listenable, Recognizeable, Dispatchable } from '@baleada/logic'
+import { Listenable, Recognizeable } from '@baleada/logic'
 import { WithGlobals } from '../../../fixtures/types';
 
 (window as unknown as WithGlobals).effects = effects;
 (window as unknown as WithGlobals).Recognizeable = Recognizeable;
 (window as unknown as WithGlobals).Listenable = Listenable;
-(window as unknown as WithGlobals).Dispatchable = Dispatchable;
+(window as unknown as WithGlobals);
 
-const listenable = new (window as unknown as WithGlobals).Listenable<TouchdragdropTypes, TouchdragdropMetadata>(
-  'recognizeable' as TouchdragdropTypes, 
+const listenable = new (window as unknown as WithGlobals).Listenable<MousedragTypes, MousedragMetadata>(
+  'recognizeable' as MousedragTypes, 
   {
     recognizeable: {
-      effects: (window as unknown as WithGlobals).effects.touchdragdrop()
+      effects: (window as unknown as WithGlobals).effects.mousedrag()
     }
   }
 );

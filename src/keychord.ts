@@ -1,10 +1,4 @@
-import { eventMatchesKeycombo, ensureKeycombo, ListenableKeycomboItem } from '@baleada/logic'
-import type { RecognizeableEffectApi } from "@baleada/logic"
-import {
-  join as lazyCollectionJoin,
-  map as lazyCollectionMap,
-  pipe as lazyCollectionPipe,
-} from 'lazy-collections'
+import type { RecognizeableEffect } from "@baleada/logic"
 import { toHookApi } from './extracted'
 import type { HookApi } from './extracted'
 
@@ -35,7 +29,7 @@ const defaultOptions: KeychordOptions = {
 }
 
 export function keychord (keycombos: string, options: KeychordOptions = {}) {
-  const ensuredKeycombos = keycombos.split(' ').map(ensureKeycombo),
+  const ensuredKeycombos = keycombos.split(' '),
         { maxInterval, preventsDefaultUnlessDenied, onDown } = { ...defaultOptions, ...options },
         cache: {
           currentKeycomboIndex: number,
@@ -47,37 +41,38 @@ export function keychord (keycombos: string, options: KeychordOptions = {}) {
           wasRecognized: false,
         }
 
-  function keydown (effectApi: RecognizeableEffectApi<'keydown', KeychordMetadata>) {
+  const keydown: RecognizeableEffect<'keydown', KeychordMetadata> = (event, api) => {
     if (cache.wasRecognized) {
-      cleanup(effectApi)
+      cleanup(event, api)
     }
 
-    const { sequenceItem: event, denied, getStatus } = effectApi
+    const { denied, getStatus } = api
     
     if (cache.lastTimeStamp === 0 || event.timeStamp - cache.lastTimeStamp > maxInterval) {
-      cleanup(effectApi)
+      cleanup(event, api)
     }
 
     cache.lastTimeStamp = event.timeStamp
 
-    const keycombo = ensuredKeycombos[cache.currentKeycomboIndex]
+    const keycombo = ensuredKeycombos[cache.currentKeycomboIndex],
+          { is } = api
 
-    if (!eventMatchesKeycombo({ event, keycombo })) {
+    if (!is(keycombo)) {
       denied()
-      cleanup(effectApi)
-      onDown?.(toHookApi(effectApi))
+      cleanup(event, api)
+      onDown?.(toHookApi(api))
       return
     }
 
-    const { getMetadata } = effectApi,
+    const { getMetadata } = api,
           metadata = getMetadata()
 
     metadata.keycombos.push({
       time: event.timeStamp,
-      name: toName(keycombo)
+      name: keycombo,
     })
 
-    recognize(effectApi)
+    recognize(event, api)
 
     if (preventsDefaultUnlessDenied) {
       const status = getStatus()
@@ -87,11 +82,11 @@ export function keychord (keycombos: string, options: KeychordOptions = {}) {
       }
     }
 
-    onDown?.(toHookApi(effectApi))
+    onDown?.(toHookApi(api))
   }
 
-  function recognize (effectApi: RecognizeableEffectApi<'keydown', KeychordMetadata>) {
-    const { recognized, getMetadata, } = effectApi,
+  const recognize: RecognizeableEffect<'keydown', KeychordMetadata> = (event, api) => {
+    const { recognized, getMetadata, } = api,
           metadata = getMetadata()
 
     // Wait for more keycombos if necessary.
@@ -106,8 +101,8 @@ export function keychord (keycombos: string, options: KeychordOptions = {}) {
     cache.wasRecognized = true
   }
 
-  function cleanup (effectApi: RecognizeableEffectApi<'keydown', KeychordMetadata>) {
-    const metadata = effectApi.getMetadata()
+  const cleanup: RecognizeableEffect<'keydown', KeychordMetadata> = (event, api) => {
+    const metadata = api.getMetadata()
 
     metadata.keycombos = []
 
@@ -115,16 +110,5 @@ export function keychord (keycombos: string, options: KeychordOptions = {}) {
     cache.wasRecognized = false
   }
 
-  return defineEffect => [
-    defineEffect('keydown', keydown),
-  ]
-}
-
-const toJoinedKeycombo = lazyCollectionPipe(
-  lazyCollectionMap(({ name }) => name),
-  lazyCollectionJoin('+')
-)
-
-function toName (keycombo: ListenableKeycomboItem[]): string {
-  return toJoinedKeycombo(keycombo)
+  return { keydown }
 }
