@@ -49,11 +49,13 @@ import { WithGlobals } from '../../../fixtures/types';
 (window as unknown as WithGlobals).Listenable = Listenable;
 (window as unknown as WithGlobals);
 
-const listenable = new (window as unknown as WithGlobals).Listenable<TouchdragdropTypes, TouchdragdropMetadata>(
-  'recognizeable' as TouchdragdropTypes, 
+const listenable = new (window as unknown as WithGlobals).Listenable<MousedragTypes, MousedragMetadata>(
+  'recognizeable' as MousedragTypes, 
   {
     recognizeable: {
-      effects: (window as unknown as WithGlobals).effects.touchdragdrop()
+      effects: (window as unknown as WithGlobals).effects.mousedrag({
+        getMousemoveTarget: () => document.body,
+      })
     }
   }
 );
@@ -61,6 +63,19 @@ const listenable = new (window as unknown as WithGlobals).Listenable<Touchdragdr
 (window as unknown as WithGlobals).testState = {
   listenable: listenable.listen(() => console.log(listenable.recognizeable.metadata))
 }
+
+// const listenable = new (window as unknown as WithGlobals).Listenable<TouchdragdropTypes, TouchdragdropMetadata>(
+//   'recognizeable' as TouchdragdropTypes, 
+//   {
+//     recognizeable: {
+//       effects: (window as unknown as WithGlobals).effects.touchdragdrop()
+//     }
+//   }
+// );
+
+// (window as unknown as WithGlobals).testState = {
+//   listenable: listenable.listen(() => console.log(listenable.recognizeable.metadata))
+// }
 
 // const listenable = new (window as unknown as WithGlobals).Listenable<TouchdragTypes, TouchdragMetadata>(
 //   'recognizeable' as TouchdragTypes, 

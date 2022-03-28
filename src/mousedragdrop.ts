@@ -20,6 +20,7 @@ export type MousedragdropMetadata = {
 export type MousedragdropOptions = {
   minDistance?: number,
   minVelocity?: number,
+  getMousemoveTarget?: (event: MouseEvent) => HTMLElement,
   onDown?: MousedragdropHook,
   onMove?: MousedragdropHook,
   onLeave?: MousedragdropHook,
@@ -33,12 +34,14 @@ export type MousedragdropHookApi = HookApi<MousedragdropTypes, MousedragdropMeta
 const defaultOptions = {
   minDistance: 0,
   minVelocity: 0,
+  getMousemoveTarget: (event: MouseEvent) => event.target as HTMLElement,
 }
 
 export function mousedragdrop (options: MousedragdropOptions = {}): RecognizeableOptions<MousedragdropTypes, MousedragdropMetadata>['effects'] {
   const { onDown, onMove, onLeave, onUp } = options,
         minDistance = options.minDistance ?? defaultOptions.minDistance,
         minVelocity = options.minVelocity ?? defaultOptions.minVelocity,
+        getMousemoveTarget = options.getMousemoveTarget ?? defaultOptions.getMousemoveTarget,
         cache: { mousemoveEffect?: (event: ListenEffectParam<'mousemove'>) => void } = {}
 
   const mousedown: RecognizeableEffect<'mousedown', MousedragdropMetadata> = (event, api) => {
@@ -50,7 +53,7 @@ export function mousedragdrop (options: MousedragdropOptions = {}): Recognizeabl
 
     const { target } = event
     cache.mousemoveEffect = event => mousemove(event, api)
-    target.addEventListener('mousemove', cache.mousemoveEffect)
+    getMousemoveTarget(event).addEventListener('mousemove', cache.mousemoveEffect)
     
     onDown?.(toHookApi(api))
   }
@@ -62,14 +65,13 @@ export function mousedragdrop (options: MousedragdropOptions = {}): Recognizeabl
   }
 
   const mouseleave: RecognizeableEffect<'mouseleave', MousedragdropMetadata> = (event, api) => {
-    const { target } = event,
-          { getMetadata, denied } = api,
+    const { getMetadata, denied } = api,
           metadata = getMetadata()
 
     if (metadata.mouseStatus === 'down') {
       denied()
       metadata.mouseStatus = 'leave'
-      target.removeEventListener('mousemove', cache.mousemoveEffect)
+      getMousemoveTarget(event).removeEventListener('mousemove', cache.mousemoveEffect)
     }
 
     onLeave?.(toHookApi(api))
