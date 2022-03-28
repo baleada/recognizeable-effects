@@ -84,13 +84,12 @@ export function mousedrag (options: MousedragOptions = {}): RecognizeableOptions
   }
 
   const mouseup: RecognizeableEffect<'mouseup', MousedragMetadata> = (event, api) => {
-    const { target } = event,
-          { getMetadata, denied } = api,
+    const { getMetadata, denied } = api,
           metadata = getMetadata()
           
     denied()
     metadata.mouseStatus = 'up'
-    target.removeEventListener('mousemove', cache.mousemoveEffect)
+    getMousemoveTarget(event).removeEventListener('mousemove', cache.mousemoveEffect)
     onUp?.(toHookApi(api))
   }
 

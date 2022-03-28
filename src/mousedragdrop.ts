@@ -78,8 +78,7 @@ export function mousedragdrop (options: MousedragdropOptions = {}): Recognizeabl
   }
 
   const mouseup: RecognizeableEffect<'mouseup', MousedragdropMetadata> = (event, api) => {
-    const { target } = event,
-          { getMetadata } = api,
+    const { getMetadata } = api,
           metadata = getMetadata()
 
     metadata.mouseStatus = 'up'
@@ -87,7 +86,7 @@ export function mousedragdrop (options: MousedragdropOptions = {}): Recognizeabl
 
     recognize(event, api)
 
-    target.removeEventListener('mousemove', cache.mousemoveEffect)
+    getMousemoveTarget(event).removeEventListener('mousemove', cache.mousemoveEffect)
 
     onUp?.(toHookApi(api))
   }
