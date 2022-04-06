@@ -40,7 +40,7 @@ export type TouchesHook = (api: TouchesHookApi) => any
 
 export type TouchesHookApi = HookApi<TouchesTypes, TouchesMetadata>
 
-const defaultOptions = {
+const defaultOptions: TouchesOptions = {
   minTouches: 1,
   maxInterval: 500, // Via https://ux.stackexchange.com/questions/40364/what-is-the-expected-timeframe-of-a-double-click
   maxDistance: 5, // TODO: research appropriate/accessible minDistance
@@ -138,18 +138,21 @@ export function touches (options: TouchesOptions = {}): RecognizeableOptions<Tou
     const { getMetadata, denied, recognized } = api,
           metadata = getMetadata()
 
-    switch (true) {
-      case metadata.lastTouch.interval > maxInterval || metadata.lastTouch.distance > maxDistance: // Deny after multiple touches and after touches with intervals or movement distances that are too large
-        const lastTouch = toCloned(metadata.lastTouch)
-        denied()
-        metadata.touches = [lastTouch]
-        break
-      default:
-        if (metadata.touches.length >= minTouches) {
-          recognized()
-        }
-        break
-      }
+    // Deny after multiple touches and after touches with intervals or movement distances that are too large
+    if (
+      metadata.touchTotal > 1
+      || metadata.lastTouch.interval > maxInterval
+      || metadata.lastTouch.distance > maxDistance
+    ) {
+      const lastTouch = toCloned(metadata.lastTouch)
+      denied()
+      metadata.touches = [lastTouch]
+      return
+    }
+
+    if (metadata.touches.length >= minTouches) {
+      recognized()
+    }
   }
   
   return { touchstart, touchmove, touchcancel, touchend }

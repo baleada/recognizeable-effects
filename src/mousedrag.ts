@@ -28,7 +28,7 @@ export type MousedragHook = (api: MousedragHookApi) => any
 
 export type MousedragHookApi = HookApi<MousedragTypes, MousedragMetadata>
 
-const defaultOptions = {
+const defaultOptions: MousedragOptions = {
   minDistance: 0,
   getMousemoveTarget: (event: MouseEvent) => event.target as HTMLElement,
 }
@@ -46,7 +46,6 @@ export function mousedrag (options: MousedragOptions = {}): RecognizeableOptions
     metadata.mouseStatus = 'down'
     storePointerStartMetadata(api as Parameters<RecognizeableEffect<'mousedown', MousedragMetadata>>[1])
 
-    const { target } = event
     cache.mousemoveEffect = event => mousemove(event, api)
     getMousemoveTarget(event).addEventListener('mousemove', cache.mousemoveEffect)
 

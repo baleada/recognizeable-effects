@@ -32,6 +32,7 @@ export type ClicksOptions = {
   minClicks?: number,
   maxInterval?: number,
   maxDistance?: number,
+  getMousemoveTarget?: (event: MouseEvent) => HTMLElement,
   onDown?: ClicksHook,
   onMove?: ClicksHook,
   onLeave?: ClicksHook,
@@ -42,10 +43,11 @@ export type ClicksHook = (api: ClicksHookApi) => any
 
 export type ClicksHookApi = HookApi<ClicksTypes, ClicksMetadata>
 
-const defaultOptions = {
+const defaultOptions: ClicksOptions = {
   minClicks: 1,
   maxInterval: 500, // Via https://ux.stackexchange.com/questions/40364/what-is-the-expected-timeframe-of-a-double-click
   maxDistance: 5, // TODO: research standard maxDistance
+  getMousemoveTarget: (event: MouseEvent) => event.target as HTMLElement,
 }
 
 const initialClick: Click = {
@@ -62,7 +64,7 @@ const initialClick: Click = {
 }
 
 export function clicks (options: ClicksOptions = {}): RecognizeableOptions<ClicksTypes, ClicksMetadata>['effects'] {
-  const { minClicks, maxInterval, maxDistance, onDown, onMove, onLeave, onUp } = { ...defaultOptions, ...options },
+  const { minClicks, maxInterval, maxDistance, getMousemoveTarget, onDown, onMove, onLeave, onUp } = { ...defaultOptions, ...options },
         cache: { mousemoveEffect?: (event: ListenEffectParam<'mousemove'>) => void } = {}
 
   const mousedown: RecognizeableEffect<ClicksTypes, ClicksMetadata> = (event, api) => {
@@ -78,9 +80,8 @@ export function clicks (options: ClicksOptions = {}): RecognizeableOptions<Click
     metadata.lastClick.times.start = event.timeStamp
     metadata.lastClick.points.start = toMousePoint(event)
 
-    const { target } = event
     cache.mousemoveEffect = event => mousemove(event, api)
-    target.addEventListener('mousemove', cache.mousemoveEffect)
+    getMousemoveTarget(event).addEventListener('mousemove', cache.mousemoveEffect)
 
     onDown?.(toHookApi(api))
   }
@@ -90,14 +91,13 @@ export function clicks (options: ClicksOptions = {}): RecognizeableOptions<Click
   }
 
   const mouseleave: RecognizeableEffect<ClicksTypes, ClicksMetadata> = (event, api) => {
-    const { target } = event,
-          { getMetadata, denied } = api,
+    const { getMetadata, denied } = api,
           metadata = getMetadata()
 
     if (metadata.mouseStatus === 'down') {
       denied()
       metadata.mouseStatus = 'leave'
-      target.removeEventListener('mousemove', cache.mousemoveEffect)
+      getMousemoveTarget(event).removeEventListener('mousemove', cache.mousemoveEffect)
     }
 
     onLeave?.(toHookApi(api))
@@ -134,26 +134,25 @@ export function clicks (options: ClicksOptions = {}): RecognizeableOptions<Click
 
     recognize(event, api)
 
-    const { target } = event
-    target.removeEventListener('mousemove', cache.mousemoveEffect)
+    getMousemoveTarget(event).removeEventListener('mousemove', cache.mousemoveEffect)
 
     onUp?.(toHookApi(api))
   }
 
   const recognize: RecognizeableEffect<ClicksTypes, ClicksMetadata> = (event, { getMetadata, denied, recognized }) => {
     const metadata = getMetadata()
-    switch (true) {
-      case metadata.lastClick.interval > maxInterval || metadata.lastClick.distance > maxDistance: // Deny after multiple touches and after clicks with intervals or movement distances that are too large
-        const lastClick = toCloned(metadata.lastClick)
-        denied()
-        metadata.clicks = [metadata.lastClick]
-        break
-      default:
-        if (metadata.clicks.length >= minClicks) {
-          recognized()
-        }
-        break
-      }
+
+    // Deny after clicks with intervals or movement distances that are too large
+    if (metadata.lastClick.interval > maxInterval || metadata.lastClick.distance > maxDistance) {
+      const lastClick = toCloned(metadata.lastClick)
+      denied()
+      metadata.clicks = [metadata.lastClick]
+      return
+    }
+    
+    if (metadata.clicks.length >= minClicks) {
+      recognized()
+    }
   }
 
   return { mousedown, mouseleave, mouseup }

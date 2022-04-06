@@ -25,6 +25,15 @@ export type {
   MousedragdropHookApi
 } from './mousedragdrop'
 
+export { mousepress } from './mousepress'
+export type {
+  MousepressTypes,
+  MousepressMetadata,
+  MousepressOptions,
+  MousepressHook,
+  MousepressHookApi
+} from './mousepress'
+
 export { touches } from './touches'
 export type {
   TouchesTypes,
@@ -52,14 +61,20 @@ export type {
   TouchdragdropHookApi
 } from './touchdragdrop'
 
-// export { pinch } from './pinch'
-// export type { PinchOptions } from './pinch'
+export { touchpress } from './touchpress'
+export type {
+  TouchpressTypes,
+  TouchpressMetadata,
+  TouchpressOptions,
+  TouchpressHook,
+  TouchpressHookApi
+} from './touchpress'
 
-// export { press } from './press'
-// export type { PressOptions } from './press'
+// export { touchpinch } from './pinch'
+// export type { TouchpinchOptions } from './pinch'
 
-// export { rotate } from './rotate'
-// export type { RotateOptions } from './rotate'
+// export { touchrotate } from './rotate'
+// export type { TouchrotateOptions } from './rotate'
 
 export { keychord } from './keychord'
 export type {

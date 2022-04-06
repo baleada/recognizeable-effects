@@ -31,7 +31,7 @@ export type MousedragdropHook = (api: MousedragdropHookApi) => any
 
 export type MousedragdropHookApi = HookApi<MousedragdropTypes, MousedragdropMetadata>
 
-const defaultOptions = {
+const defaultOptions: MousedragdropOptions = {
   minDistance: 0,
   minVelocity: 0,
   getMousemoveTarget: (event: MouseEvent) => event.target as HTMLElement,

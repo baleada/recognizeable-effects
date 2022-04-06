@@ -27,7 +27,7 @@ export type TouchdragHook = (api: TouchdragHookApi) => any
 
 export type TouchdragHookApi = HookApi<TouchdragTypes, TouchdragMetadata>
 
-const defaultOptions = {
+const defaultOptions: TouchdragOptions = {
   minDistance: 0,
 }
 

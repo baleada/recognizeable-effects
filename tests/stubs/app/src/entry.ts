@@ -15,6 +15,11 @@ import type {
   MousedragdropOptions,
   MousedragdropHook,
   MousedragdropHookApi,
+  MousepressTypes,
+  MousepressMetadata,
+  MousepressOptions,
+  MousepressHook,
+  MousepressHookApi,
   TouchesTypes,
   TouchesMetadata,
   TouchesOptions,
@@ -30,6 +35,11 @@ import type {
   TouchdragdropOptions,
   TouchdragdropHook,
   TouchdragdropHookApi,
+  TouchpressTypes,
+  TouchpressMetadata,
+  TouchpressOptions,
+  TouchpressHook,
+  TouchpressHookApi,
   KeychordTypes,
   KeychordMetadata,
   KeychordOptions,
@@ -49,12 +59,13 @@ import { WithGlobals } from '../../../fixtures/types';
 (window as unknown as WithGlobals).Listenable = Listenable;
 (window as unknown as WithGlobals);
 
-const listenable = new (window as unknown as WithGlobals).Listenable<MousedragTypes, MousedragMetadata>(
-  'recognizeable' as MousedragTypes, 
+const listenable = new (window as unknown as WithGlobals).Listenable<TouchpressTypes, TouchpressMetadata>(
+  'recognizeable' as TouchpressTypes, 
   {
     recognizeable: {
-      effects: (window as unknown as WithGlobals).effects.mousedrag({
-        getMousemoveTarget: () => document.body,
+      effects: (window as unknown as WithGlobals).effects.touchpress({
+        maxDistance: 200,
+        minDuration: 1000,
       })
     }
   }
