@@ -70,6 +70,15 @@ export type {
   TouchpressHookApi
 } from './touchpress'
 
+export { touchrotate } from './touchrotate'
+export type {
+  TouchrotateTypes,
+  TouchrotateMetadata,
+  TouchrotateOptions,
+  TouchrotateHook,
+  TouchrotateHookApi
+} from './touchrotate'
+
 // export { touchpinch } from './pinch'
 // export type { TouchpinchOptions } from './pinch'
 
