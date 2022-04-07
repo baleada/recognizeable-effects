@@ -34,9 +34,7 @@ const defaultOptions: MousedragOptions = {
 }
 
 export function mousedrag (options: MousedragOptions = {}): RecognizeableOptions<MousedragTypes, MousedragMetadata>['effects'] {
-  const { onDown, onMove, onLeave, onUp } = options,
-        minDistance = options.minDistance ?? defaultOptions.minDistance,
-        getMousemoveTarget = options.getMousemoveTarget ?? defaultOptions.getMousemoveTarget,
+  const { minDistance, getMousemoveTarget, onDown, onMove, onLeave, onUp } = { ...defaultOptions, ...options },
         cache: { mousemoveEffect?: (event: ListenEffectParam<'mousemove'>) => void } = {}
 
   const mousedown: RecognizeableEffect<'mousedown', MousedragMetadata> = (event, api) => {
@@ -44,7 +42,7 @@ export function mousedrag (options: MousedragOptions = {}): RecognizeableOptions
           metadata = getMetadata()
 
     metadata.mouseStatus = 'down'
-    storePointerStartMetadata(api as Parameters<RecognizeableEffect<'mousedown', MousedragMetadata>>[1])
+    storePointerStartMetadata(event, api as Parameters<RecognizeableEffect<'mousedown', MousedragMetadata>>[1])
 
     cache.mousemoveEffect = event => mousemove(event, api)
     getMousemoveTarget(event).addEventListener('mousemove', cache.mousemoveEffect)
@@ -53,7 +51,7 @@ export function mousedrag (options: MousedragOptions = {}): RecognizeableOptions
   }
 
   const mousemove: RecognizeableEffect<'mousemove', MousedragMetadata> = (event, api) => {
-    storePointerMoveMetadata(api)
+    storePointerMoveMetadata(event, api)
     recognize(event, api)
 
     onMove?.(toHookApi(api))

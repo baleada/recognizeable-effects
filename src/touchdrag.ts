@@ -32,15 +32,14 @@ const defaultOptions: TouchdragOptions = {
 }
 
 export function touchdrag (options: TouchdragOptions = {}): RecognizeableOptions<TouchdragTypes, TouchdragMetadata>['effects'] {
-  const { onStart, onMove, onCancel, onEnd } = options,
-        minDistance = options.minDistance ?? defaultOptions.minDistance
+  const { minDistance, onStart, onMove, onCancel, onEnd } = { ...defaultOptions, ...options }
 
   const touchstart: RecognizeableEffect<'touchstart', TouchdragMetadata> = (event, api) => {
     const { getMetadata } = api,
           metadata = getMetadata()
     
     metadata.touchTotal = event.touches.length
-    storePointerStartMetadata(api)
+    storePointerStartMetadata(event, api)
     
     onStart?.(toHookApi(api))
   }
@@ -50,7 +49,7 @@ export function touchdrag (options: TouchdragOptions = {}): RecognizeableOptions
           metadata = getMetadata()
 
     if (metadata.touchTotal === 1) {
-      storePointerMoveMetadata(api)
+      storePointerMoveMetadata(event, api)
       recognize(event, api)
     } else {
       denied()

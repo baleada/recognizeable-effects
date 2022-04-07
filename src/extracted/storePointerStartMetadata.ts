@@ -24,7 +24,7 @@ const initialMetadata: PointerStartMetadata = {
   }
 }
 
-export function storePointerStartMetadata<Type extends 'mousedown' | 'touchstart', Metadata extends PointerStartMetadata> (api: Parameters<RecognizeableEffect<Type, Metadata>>[1]): void {
+export function storePointerStartMetadata<Type extends 'mousedown' | 'touchstart', Metadata extends PointerStartMetadata> (event: MouseEvent | TouchEvent, api: Parameters<RecognizeableEffect<Type, Metadata>>[1]): void {
   const { getMetadata } = api,
         metadata = getMetadata()
 

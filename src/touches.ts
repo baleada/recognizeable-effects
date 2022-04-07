@@ -60,10 +60,7 @@ const initialTouch: Touch = {
 }
 
 export function touches (options: TouchesOptions = {}): RecognizeableOptions<TouchesTypes, TouchesMetadata>['effects'] {
-  const { onStart, onMove, onCancel, onEnd } = options,
-        minTouches = options.minTouches ?? defaultOptions.minTouches,
-        maxInterval = options.maxInterval ?? defaultOptions.maxInterval,
-        maxDistance = options.maxDistance ?? defaultOptions.maxDistance
+  const { minTouches, maxInterval, maxDistance, onStart, onMove, onCancel, onEnd } = { ...defaultOptions, ...options }
 
   const touchstart: RecognizeableEffect<'touchstart', TouchesMetadata> = (event, api) => {
     const { getMetadata } = api,

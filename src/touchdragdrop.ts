@@ -36,16 +36,14 @@ const defaultOptions: TouchdragdropOptions = {
 }
 
 export function touchdragdrop (options: TouchdragdropOptions = {}): RecognizeableOptions<TouchdragdropTypes, TouchdragdropMetadata>['effects'] {
-  const { onStart, onMove, onCancel, onEnd } = options,
-        minDistance = options.minDistance ?? defaultOptions.minDistance,
-        minVelocity = options.minVelocity ?? defaultOptions.minVelocity
+  const { minDistance, minVelocity, onStart, onMove, onCancel, onEnd } = { ...defaultOptions, ...options }
 
   const touchstart: RecognizeableEffect<'touchstart', TouchdragdropMetadata> = (event, api) => {
     const { getMetadata } = api,
           metadata = getMetadata()
     
     metadata.touchTotal = event.touches.length
-    storePointerStartMetadata(api)
+    storePointerStartMetadata(event, api)
     
     onStart?.(toHookApi(api))
   }
@@ -55,7 +53,7 @@ export function touchdragdrop (options: TouchdragdropOptions = {}): Recognizeabl
           metadata = getMetadata()
 
     if (metadata.touchTotal === 1) {
-      storePointerMoveMetadata(api)
+      storePointerMoveMetadata(event, api)
     } else {
       denied()
     }
@@ -76,7 +74,7 @@ export function touchdragdrop (options: TouchdragdropOptions = {}): Recognizeabl
           metadata = getMetadata()
 
     metadata.touchTotal = metadata.touchTotal - 1
-    storePointerMoveMetadata(api)
+    storePointerMoveMetadata(event, api)
 
     recognize(event, api)
 

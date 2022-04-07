@@ -40,6 +40,11 @@ import type {
   TouchpressOptions,
   TouchpressHook,
   TouchpressHookApi,
+  TouchrotateTypes,
+  TouchrotateMetadata,
+  TouchrotateOptions,
+  TouchrotateHook,
+  TouchrotateHookApi,
   KeychordTypes,
   KeychordMetadata,
   KeychordOptions,
@@ -52,26 +57,23 @@ import type {
   KonamiHookApi
 } from '../../../../src'
 import { Listenable, Recognizeable } from '@baleada/logic'
-import { WithGlobals } from '../../../fixtures/types';
+import { WithGlobals } from '../../../fixtures/types'
 
-(window as unknown as WithGlobals).effects = effects;
-(window as unknown as WithGlobals).Recognizeable = Recognizeable;
-(window as unknown as WithGlobals).Listenable = Listenable;
-(window as unknown as WithGlobals);
+;(window as unknown as WithGlobals).effects = effects;
+;(window as unknown as WithGlobals).Recognizeable = Recognizeable;
+;(window as unknown as WithGlobals).Listenable = Listenable;
+;(window as unknown as WithGlobals);
 
-const listenable = new (window as unknown as WithGlobals).Listenable<TouchpressTypes, TouchpressMetadata>(
-  'recognizeable' as TouchpressTypes, 
+const listenable = new (window as unknown as WithGlobals).Listenable<TouchrotateTypes, TouchrotateMetadata>(
+  'recognizeable' as TouchrotateTypes, 
   {
     recognizeable: {
-      effects: (window as unknown as WithGlobals).effects.touchpress({
-        maxDistance: 200,
-        minDuration: 1000,
-      })
+      effects: (window as unknown as WithGlobals).effects.touchrotate()
     }
   }
-);
+)
 
-(window as unknown as WithGlobals).testState = {
+;(window as unknown as WithGlobals).testState = {
   listenable: listenable.listen(() => console.log(listenable.recognizeable.metadata))
 }
 
