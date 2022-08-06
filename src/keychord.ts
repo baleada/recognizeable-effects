@@ -67,6 +67,10 @@ export function keychord (keycombos: string, options: KeychordOptions = {}) {
     const { getMetadata } = api,
           metadata = getMetadata()
 
+    if (!metadata.keycombos) {
+      metadata.keycombos = []
+    }
+
     metadata.keycombos.push({
       time: event.timeStamp,
       name: keycombo,
