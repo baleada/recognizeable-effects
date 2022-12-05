@@ -1,12 +1,11 @@
 import type { RecognizeableEffect } from '@baleada/logic'
 import { toDirection } from './toDirection'
 import type { Direction } from './toDirection'
-import { toMousePoint, toTouchMovePoint } from './toPoints'
+import { toMousePoint, toTouchMovePoint, toTouchEndPoint } from './toPoints'
 import { toPolarCoordinates } from './toPolarCoordinates'
 import type { PolarCoordinates } from './toPolarCoordinates'
 import type { PointerStartMetadata } from './storePointerStartMetadata'
 import { toCloned } from './toCloned'
-import { toTouchEndPoint } from '.'
 
 export type PointerMoveMetadata = {
   distance: {

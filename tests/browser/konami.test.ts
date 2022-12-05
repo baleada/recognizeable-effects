@@ -34,6 +34,7 @@ suite(`recognizes Konami code`, async ({ playwright: { page, reloadNext } }) => 
   await page.keyboard.press('ArrowRight')
   await page.keyboard.press('B')
   await page.keyboard.press('A')
+  await page.keyboard.press('Enter')
   
   const value = await page.evaluate(() => (window as unknown as WithGlobals).testState.listenable.recognizeable.status),
         expected = 'recognized'

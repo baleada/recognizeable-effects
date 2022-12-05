@@ -34,6 +34,8 @@ export type {
   MousepressHookApi
 } from './mousepress'
 
+// TODO: Figure out proper touchTotal based denial on all touch stuff
+
 export { touches } from './touches'
 export type {
   TouchesTypes,
@@ -93,6 +95,15 @@ export type {
   KeychordHook,
   KeychordHookApi
 } from './keychord'
+
+export { keypress } from './keypress'
+export type {
+  KeypressTypes,
+  KeypressMetadata,
+  KeypressOptions,
+  KeypressHook,
+  KeypressHookApi
+} from './keypress'
 
 export { konami } from './konami'
 export type {

@@ -44,17 +44,17 @@
   },
   "homepage": "https://baleada.netlify.com",
   "devDependencies": {
-    "@baleada/prepare": "^0.5.20",
+    "@baleada/prepare": "^0.5.29",
     "esbuild": "^0.14.28",
     "esbuild-register": "^3.3.2",
-    "rollup": "^2.70.1",
-    "typescript": "^4.6.3",
+    "rollup": "^3.5.1",
+    "typescript": "^4.9.3",
     "uvu": "^0.5.3",
-    "vite": "^2.8.6"
+    "vite": "^3.2.4"
   },
   "sideEffects": false,
   "dependencies": {
-    "@baleada/logic": "^0.22.2",
+    "@baleada/logic": "^0.22.3",
     "lazy-collections": "^0.8.0"
   }
 }

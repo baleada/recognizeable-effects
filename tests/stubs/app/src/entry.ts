@@ -50,6 +50,11 @@ import type {
   KeychordOptions,
   KeychordHook,
   KeychordHookApi,
+  KeypressTypes,
+  KeypressMetadata,
+  KeypressOptions,
+  KeypressHook,
+  KeypressHookApi,
   KonamiTypes,
   KonamiMetadata,
   KonamiOptions,
@@ -64,11 +69,11 @@ import { WithGlobals } from '../../../fixtures/types'
 ;(window as unknown as WithGlobals).Listenable = Listenable;
 ;(window as unknown as WithGlobals);
 
-const listenable = new (window as unknown as WithGlobals).Listenable<TouchrotateTypes, TouchrotateMetadata>(
-  'recognizeable' as TouchrotateTypes, 
+const listenable = new (window as unknown as WithGlobals).Listenable<MousepressTypes, MousepressMetadata>(
+  'recognizeable' as MousepressTypes, 
   {
     recognizeable: {
-      effects: (window as unknown as WithGlobals).effects.touchrotate()
+      effects: (window as unknown as WithGlobals).effects.mousepress({ minDuration: 2000, effectLimit: false })
     }
   }
 )
@@ -76,6 +81,32 @@ const listenable = new (window as unknown as WithGlobals).Listenable<Touchrotate
 ;(window as unknown as WithGlobals).testState = {
   listenable: listenable.listen(() => console.log(listenable.recognizeable.metadata))
 }
+
+// const listenable = new (window as unknown as WithGlobals).Listenable<TouchpressTypes, TouchpressMetadata>(
+//   'recognizeable' as TouchpressTypes, 
+//   {
+//     recognizeable: {
+//       effects: (window as unknown as WithGlobals).effects.touchpress({ minDuration: 2000, effectLimit: false, onStart: api => api.sequence.at(-1).preventDefault() })
+//     }
+//   }
+// )
+
+// ;(window as unknown as WithGlobals).testState = {
+//   listenable: listenable.listen(() => console.log(listenable.recognizeable.metadata))
+// }
+
+// const listenable = new (window as unknown as WithGlobals).Listenable<KeypressTypes, KeypressMetadata>(
+//   'recognizeable' as KeypressTypes, 
+//   {
+//     recognizeable: {
+//       effects: (window as unknown as WithGlobals).effects.keypress('space', { minDuration: 2000, effectLimit: false })
+//     }
+//   }
+// )
+
+// ;(window as unknown as WithGlobals).testState = {
+//   listenable: listenable.listen(() => console.log(listenable.recognizeable.metadata))
+// }
 
 // const listenable = new (window as unknown as WithGlobals).Listenable<TouchdragdropTypes, TouchdragdropMetadata>(
 //   'recognizeable' as TouchdragdropTypes, 

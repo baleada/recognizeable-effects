@@ -1,32 +1,26 @@
-import { toHookApi, toCloned, toTouchMovePoint, toPolarCoordinates } from './extracted'
-import type { HookApi, PointerStartMetadata } from './extracted'
 import type { RecognizeableEffect, RecognizeableOptions } from '@baleada/logic'
+import { toHookApi, storePointerStartMetadata, PointerStartMetadata, PointerMoveMetadata } from './extracted'
+import type { HookApi } from './extracted'
 
 /*
- * touches is defined as a single touch that:
+ * touchpress is defined as a single touch that:
  * - starts at a given point
- * - does not move beyond a maximum distance
- * - does not cancel
- * - does not end before 500ms (or a minimum duration of your choice) has elapsed
+ * - does not cancel or end before 0ms (or a minimum duration of your choice) has elapsed
  */
 
-export type TouchpressTypes = 'touchstart' | 'touchcancel' | 'touchmove' | 'touchend'
+export type TouchpressTypes = 'touchstart' | 'touchcancel' | 'touchend'
 
 export type TouchpressMetadata = {
-  touchTotal: number,
-  times: PointerStartMetadata['times'],
-  points: PointerStartMetadata['points'],
-  distance: number,
   duration: number,
-}
+  touchTotal: number,
+} & PointerStartMetadata
 
 export type TouchpressOptions = {
   minDuration?: number,
-  maxDistance?: number,
+  effectLimit?: number | false,
   onStart?: TouchpressHook,
-  onMove?: TouchpressHook,
   onCancel?: TouchpressHook,
-  onEnd?: TouchpressHook
+  onEnd?: TouchpressHook,
 }
 
 export type TouchpressHook = (api: TouchpressHookApi) => any
@@ -34,129 +28,85 @@ export type TouchpressHook = (api: TouchpressHookApi) => any
 export type TouchpressHookApi = HookApi<TouchpressTypes, TouchpressMetadata>
 
 const defaultOptions: TouchpressOptions = {
-  minDuration: 500, // Via https://github.com/adobe/react-spectrum/blob/57ceb1ceb0092d523db9d379ce9ff8e60e421a69/packages/%40react-aria/interactions/src/useLongPress.ts#L33-L37
-  maxDistance: 5, // TODO: research standard maxDistance
-}
-
-const initialMeta = {
-  times: {
-    start: 0,
-    end: 0
-  },
-  points: {
-    start: { x: 0, y: 0 },
-    end: { x: 0, y: 0 }
-  },
-  distance: 0,
+  minDuration: 0,
+  effectLimit: 1,
 }
 
 export function touchpress (options: TouchpressOptions = {}): RecognizeableOptions<TouchpressTypes, TouchpressMetadata>['effects'] {
-  const { minDuration, maxDistance, onStart, onMove, onCancel, onEnd } = { ...defaultOptions, ...options },
-        cache: { request?: number } = {}
+  const { minDuration, effectLimit, onStart, onCancel, onEnd } = { ...defaultOptions, ...options },
+        cache: {
+          request?: number,
+          totalEffects?: number
+        } = {}
 
   const touchstart: RecognizeableEffect<'touchstart', TouchpressMetadata> = (event, api) => {
-    const { getMetadata } = api,
+    const { getMetadata, getStatus, denied } = api,
           metadata = getMetadata()
-    
-    metadata.touchTotal = event.touches.length
 
-    if (!metadata.times) {
-      metadata.times = toCloned(initialMeta.times)
-      metadata.points = toCloned(initialMeta.points)
-      metadata.distance = 0
-    }
-    
-    metadata.times.start = event.timeStamp
-    metadata.points.start = toTouchMovePoint(event)
+    metadata.touchTotal = event.touches.length
+    storePointerStartMetadata(event, api)
+    metadata.duration = 0
+    cache.totalEffects = 0
 
     const storeDuration = () => {
       cache.request = requestAnimationFrame(timestamp => {
         if (metadata.touchTotal === 1) {
           metadata.times.end = timestamp
-          metadata.duration = timestamp - metadata.times.start
+          metadata.duration = Math.max(0, timestamp - metadata.times.start)
           
           recognize(event, api)
           
-          if (api.getStatus() === 'recognizing') storeDuration()
+          const status = getStatus()
+          if (
+            (status === 'recognizing' || status === 'recognized')
+            && (effectLimit === false || cache.totalEffects < effectLimit)
+          ) storeDuration()
+        } else {
+          denied()
         }
       })
     }
-
+    
     storeDuration()
 
     onStart?.(toHookApi(api))
   }
 
-  const touchmove: RecognizeableEffect<'touchmove', TouchpressMetadata> = (event, api) => {
-    const { getMetadata } = api,
-          metadata = getMetadata(),
-          { x: xA, y: yA } = metadata.points.start,
-          { clientX: xB, clientY: yB } = event.changedTouches.item(0),
-          { distance } = toPolarCoordinates({ xA, xB, yA, yB }),
-          endPoint = { x: xB, y: yB },
-          endTime = event.timeStamp
+  const recognize: RecognizeableEffect<'touchstart', TouchpressMetadata> = (event, api) => {
+    const { getMetadata, recognized, onRecognized } = api,
+          metadata = getMetadata()
 
-    metadata.points.end = endPoint
-    metadata.times.end = endTime
-    metadata.distance = distance
+    if (metadata.duration >= minDuration) {
+      recognized()
+      onRecognized(event)
 
-    onMove?.(toHookApi(api))
+      if (effectLimit !== false) {
+        cache.totalEffects += 1
+      }
+    }
   }
 
   const touchcancel: RecognizeableEffect<'touchcancel', TouchpressMetadata> = (event, api) => {
-    const { getMetadata, denied } = api,
-          metadata = getMetadata()
-
-    if (metadata.touchTotal === 1) {
-      denied()
-      window.cancelAnimationFrame(cache.request)
-      metadata.touchTotal = metadata.touchTotal - 1 // TODO: is there a way to un-cancel a touch without triggering a touch start? If so, this touch total calc would be wrong.
-    }
+    const { denied } = api
+          
+    denied()
+    window.cancelAnimationFrame(cache.request)
 
     onCancel?.(toHookApi(api))
   }
 
   const touchend: RecognizeableEffect<'touchend', TouchpressMetadata> = (event, api) => {
-    const { getMetadata, denied } = api,
-          metadata = getMetadata()
-
+    const { denied } = api
+          
     denied()
     window.cancelAnimationFrame(cache.request)
-    metadata.touchTotal = metadata.touchTotal - 1
-
-    const { x: xA, y: yA } = metadata.points.start,
-          { clientX: xB, clientY: yB } = event.changedTouches.item(0),
-          { distance } = toPolarCoordinates({ xA, xB, yA, yB }),
-          endPoint = { x: xB, y: yB },
-          endTime = event.timeStamp
-
-    metadata.points.end = endPoint
-    metadata.times.end = endTime
-    metadata.distance = distance
-
+    
     onEnd?.(toHookApi(api))
   }
 
-  const recognize: RecognizeableEffect<'touchend', TouchpressMetadata> = (event, api) => {
-    const { getMetadata, denied, recognized, onRecognized } = api,
-          metadata = getMetadata()
-
-    // Deny after multiple touches and after touches with movement distances that are too large
-    if (
-      metadata.touchTotal > 1
-      || metadata.distance > maxDistance
-    ) {
-      denied()
-      window.cancelAnimationFrame(cache.request)
-      return
-    }
-
-    if (metadata.duration >= minDuration) {
-      recognized()
-      window.cancelAnimationFrame(cache.request)
-      onRecognized(event)
-    }
+  return {
+    touchstart,
+    touchcancel,
+    touchend,
   }
-  
-  return { touchstart, touchmove, touchcancel, touchend }
 }
