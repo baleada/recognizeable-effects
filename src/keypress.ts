@@ -1,3 +1,4 @@
+import { find, some } from 'lazy-collections'
 import type { RecognizeableEffect } from "@baleada/logic"
 import { toHookApi, storeKeydownStartMetadata } from './extracted'
 import type { HookApi, KeydownStartMetadata } from './extracted'
@@ -7,6 +8,7 @@ export type KeypressTypes = 'keydown' | 'keyup'
 export type KeypressMetadata = {
   duration: number,
   keyStatus: 'down' | 'up',
+  keycombo: string,
 } & KeydownStartMetadata
 
 export type KeypressOptions = {
@@ -14,7 +16,6 @@ export type KeypressOptions = {
   effectLimit?: number | false,
   onDown?: KeypressHook,
   onUp?: KeypressHook
-  preventsDefaultUnlessDenied?: boolean,
 }
 
 export type KeypressHook = (api: KeypressHookApi) => any
@@ -26,17 +27,25 @@ const defaultOptions: KeypressOptions = {
   effectLimit: 1,
 }
 
-export function keypress (keycombo: string, options: KeypressOptions = {}) {
-  const { minDuration, effectLimit, onDown, onUp } = { ...defaultOptions, ...options },
+export function keypress (
+  keycombo: string | string[],
+  options: KeypressOptions = {}
+) {
+  const ensuredKeycombos = Array.isArray(keycombo) ? keycombo : [keycombo],
+        { minDuration, effectLimit, onDown, onUp } = { ...defaultOptions, ...options },
         cache: {
           request?: number,
           totalEffects?: number
         } = {}
 
   const keydown: RecognizeableEffect<'keydown', KeypressMetadata> = (event, api) => {
-    const { is, denied } = api
+    const { matches, denied } = api
 
-    if (!is(keycombo)) {
+    if (
+      !some<typeof ensuredKeycombos[0]>(
+        ensuredKeycombo => matches(ensuredKeycombo)
+      )(ensuredKeycombos)
+    ) {
       denied()
       onDown?.(toHookApi(api))
       return
@@ -46,6 +55,7 @@ export function keypress (keycombo: string, options: KeypressOptions = {}) {
           metadata = getMetadata()
 
     metadata.keyStatus = 'down'
+    metadata.keycombo = find(matches)(ensuredKeycombos) as string
     if (!metadata.times) {
       storeKeydownStartMetadata(event, api)
       metadata.duration = 0
@@ -94,6 +104,8 @@ export function keypress (keycombo: string, options: KeypressOptions = {}) {
   const keyup: RecognizeableEffect<'keyup', KeypressMetadata> = (event, api) => {
     const { getMetadata, denied } = api,
           metadata = getMetadata()
+
+    if (metadata.keyStatus !== 'down') return
           
     denied()
     window.cancelAnimationFrame(cache.request)

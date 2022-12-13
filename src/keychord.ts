@@ -55,9 +55,9 @@ export function keychord (keycombos: string, options: KeychordOptions = {}) {
     cache.lastTimeStamp = event.timeStamp
 
     const keycombo = ensuredKeycombos[cache.currentKeycomboIndex],
-          { is } = api
+          { matches } = api
 
-    if (!is(keycombo)) {
+    if (!matches(keycombo)) {
       denied()
       cleanup(event, api)
       onDown?.(toHookApi(api))

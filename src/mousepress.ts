@@ -98,6 +98,8 @@ export function mousepress (options: MousepressOptions = {}): RecognizeableOptio
   const mouseup: RecognizeableEffect<'mouseup', MousepressMetadata> = (event, api) => {
     const { getMetadata, denied } = api,
           metadata = getMetadata()
+
+    if (metadata.mouseStatus !== 'down') return
           
     denied()
     window.cancelAnimationFrame(cache.request)

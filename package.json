@@ -8,7 +8,7 @@
     "import": "./lib/index.js"
   },
   "scripts": {
-    "prepare": "tsc && rollup --config rollup.config.ts",
+    "prepare": "tsc && rollup --config rollup.config.ts --configPlugin typescript --bundleConfigAsCjs",
     "test:only": "run() { uvu -r esbuild-register tests/$2 $1.test.ts$; }; run",
     "test": "npm run test:only .",
     "dev": "vite"
@@ -48,6 +48,7 @@
     "esbuild": "^0.14.28",
     "esbuild-register": "^3.3.2",
     "rollup": "^3.5.1",
+    "tslib": "^2.4.1",
     "typescript": "^4.9.3",
     "uvu": "^0.5.3",
     "vite": "^3.2.4"
