@@ -55,7 +55,7 @@
   },
   "sideEffects": false,
   "dependencies": {
-    "@baleada/logic": "^0.22.3",
+    "@baleada/logic": "^0.22.4",
     "lazy-collections": "^0.8.0"
   }
 }

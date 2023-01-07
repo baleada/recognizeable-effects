@@ -3,15 +3,15 @@ type Cloneable = {
 }
 
 export function toCloned<T extends Cloneable> (object: T): T {
-  const toClonedd: T = {} as T
+  const cloned: T = {} as T
 
   for (const key in object) {
-    // @ts-ignore
-    toClonedd[key] = typeof object[key] === 'string' || typeof object[key] === 'number' || typeof object[key] === 'boolean'
+    // @ts-expect-error
+    cloned[key] = typeof object[key] === 'string' || typeof object[key] === 'number' || typeof object[key] === 'boolean'
       ? object[key]
-      // @ts-ignore
+      // @ts-expect-error
       : toCloned(object[key])
   }
 
-  return toClonedd
+  return cloned
 }
