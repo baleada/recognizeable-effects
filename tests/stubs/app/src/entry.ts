@@ -5,16 +5,6 @@ import type {
   ClicksOptions,
   ClicksHook,
   ClicksHookApi,
-  MousedragTypes,
-  MousedragMetadata,
-  MousedragOptions,
-  MousedragHook,
-  MousedragHookApi,
-  MousedragdropTypes,
-  MousedragdropMetadata,
-  MousedragdropOptions,
-  MousedragdropHook,
-  MousedragdropHookApi,
   MousepressTypes,
   MousepressMetadata,
   MousepressOptions,
@@ -25,16 +15,6 @@ import type {
   TouchesOptions,
   TouchesHook,
   TouchesHookApi,
-  TouchdragTypes,
-  TouchdragMetadata,
-  TouchdragOptions,
-  TouchdragHook,
-  TouchdragHookApi,
-  TouchdragdropTypes,
-  TouchdragdropMetadata,
-  TouchdragdropOptions,
-  TouchdragdropHook,
-  TouchdragdropHookApi,
   TouchpressTypes,
   TouchpressMetadata,
   TouchpressOptions,
@@ -62,87 +42,113 @@ import type {
   KonamiHookApi
 } from '../../../../src'
 import { Listenable, Recognizeable } from '@baleada/logic'
-import { WithGlobals } from '../../../fixtures/types'
 
-;(window as unknown as WithGlobals).effects = effects;
-;(window as unknown as WithGlobals).Recognizeable = Recognizeable;
-;(window as unknown as WithGlobals).Listenable = Listenable;
-;(window as unknown as WithGlobals);
+window.effects = effects;
+window.Recognizeable = Recognizeable;
+window.Listenable = Listenable;
+window;
 
-const listenable = new (window as unknown as WithGlobals).Listenable<MousepressTypes, MousepressMetadata>(
-  'recognizeable' as MousepressTypes, 
+// const listenable = new window.Listenable<MousepressTypes, MousepressMetadata>(
+//   'recognizeable' as MousepressTypes, 
+//   {
+//     recognizeable: {
+//       effects: window.effects.createMousepress({ minDuration: 2000 })
+//     }
+//   }
+// )
+
+// window.testState = {
+//   listenable: listenable.listen(() => console.log(listenable.recognizeable.metadata))
+// }
+
+const listenable = new window.Listenable<TouchpressTypes, TouchpressMetadata>(
+  'recognizeable' as TouchpressTypes, 
   {
     recognizeable: {
-      effects: (window as unknown as WithGlobals).effects.mousepress({ minDuration: 2000, effectLimit: false })
+      effects: window.effects.createTouchrelease({
+        minDuration: 0,
+        onStart: () => startLog.textContent = `${startLogs++}`,
+        onEnd: () => endLog.textContent = `${endLogs++}`
+      })
     }
   }
 )
 
-;(window as unknown as WithGlobals).testState = {
-  listenable: listenable.listen(() => console.log(listenable.recognizeable.metadata))
+let startLogs = 0
+let endLogs = 0
+
+function getLog () {
+  const pre = document.createElement('pre')
+  const code = document.createElement('code')
+  pre.appendChild(code)
+  ;(document.querySelector('main') as HTMLElement).appendChild(pre)
+
+  return code
 }
 
-// const listenable = new (window as unknown as WithGlobals).Listenable<TouchpressTypes, TouchpressMetadata>(
-//   'recognizeable' as TouchpressTypes, 
-//   {
-//     recognizeable: {
-//       effects: (window as unknown as WithGlobals).effects.touchpress({ minDuration: 2000, effectLimit: false, onStart: api => api.sequence.at(-1).preventDefault() })
-//     }
-//   }
-// )
+const metadataLog = getLog()
+const startLog = getLog()
+const endLog = getLog()
 
-// ;(window as unknown as WithGlobals).testState = {
-//   listenable: listenable.listen(() => console.log(listenable.recognizeable.metadata))
-// }
 
-// const listenable = new (window as unknown as WithGlobals).Listenable<KeypressTypes, KeypressMetadata>(
+window.testState = {
+  listenable: listenable.listen(
+    () => {
+      console.log(listenable.recognizeable.metadata)
+      metadataLog.textContent = JSON.stringify(listenable.recognizeable.metadata, null, 2)
+    },
+    { addEventListener: { passive: false } }
+  )
+}
+
+// const listenable = new window.Listenable<KeypressTypes, KeypressMetadata>(
 //   'recognizeable' as KeypressTypes, 
 //   {
 //     recognizeable: {
-//       effects: (window as unknown as WithGlobals).effects.keypress('space', { minDuration: 2000, effectLimit: false })
+//       effects: window.effects.keypress('space', { minDuration: 2000, effectLimit: false })
 //     }
 //   }
 // )
 
-// ;(window as unknown as WithGlobals).testState = {
+// window.testState = {
 //   listenable: listenable.listen(() => console.log(listenable.recognizeable.metadata))
 // }
 
-// const listenable = new (window as unknown as WithGlobals).Listenable<TouchdragdropTypes, TouchdragdropMetadata>(
+// const listenable = new window.Listenable<TouchdragdropTypes, TouchdragdropMetadata>(
 //   'recognizeable' as TouchdragdropTypes, 
 //   {
 //     recognizeable: {
-//       effects: (window as unknown as WithGlobals).effects.touchdragdrop()
+//       effects: window.effects.touchdragdrop()
 //     }
 //   }
 // );
 
-// (window as unknown as WithGlobals).testState = {
+// window.testState = {
 //   listenable: listenable.listen(() => console.log(listenable.recognizeable.metadata))
 // }
 
-// const listenable = new (window as unknown as WithGlobals).Listenable<TouchdragTypes, TouchdragMetadata>(
+// const listenable = new window.Listenable<TouchdragTypes, TouchdragMetadata>(
 //   'recognizeable' as TouchdragTypes, 
 //   {
 //     recognizeable: {
-//       effects: (window as unknown as WithGlobals).effects.touchdrag()
+//       effects: window.effects.touchdrag()
 //     }
 //   }
 // );
 
-// (window as unknown as WithGlobals).testState = {
+// window.testState = {
 //   listenable: listenable.listen(() => console.log(listenable.recognizeable.metadata))
 // }
 
-// const listenable = new (window as unknown as WithGlobals).Listenable<TouchesTypes, TouchesMetadata>(
+// const listenable = new window.Listenable<TouchesTypes, TouchesMetadata>(
 //   'recognizeable' as TouchesTypes, 
 //   {
 //     recognizeable: {
-//       effects: (window as unknown as WithGlobals).effects.touches()
+//       effects: window.effects.touches()
 //     }
 //   }
 // );
 
-// (window as unknown as WithGlobals).testState = {
+// window.testState = {
 //   listenable: listenable.listen(() => console.log(listenable.recognizeable.metadata))
 // }

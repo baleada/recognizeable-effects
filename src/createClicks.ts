@@ -1,6 +1,6 @@
 import { ListenEffectParam, RecognizeableEffect, RecognizeableOptions } from '@baleada/logic'
 import { toHookApi, toCloned, toMousePoint, toPolarCoordinates } from './extracted'
-import type { HookApi, PointerStartMetadata } from './extracted'
+import type { HookApi, PointerStartMetadata, PointerTimeMetadata } from './extracted'
 
 /*
  * clicks is defined as a single mousedown/mouseup combination that:
@@ -22,7 +22,7 @@ export type ClicksMetadata = {
 }
 
 type Click = {
-  times: PointerStartMetadata['times'],
+  times: PointerTimeMetadata['times'],
   points: PointerStartMetadata['points'], 
   distance: number,
   interval: number
@@ -63,7 +63,7 @@ const initialClick: Click = {
   interval: 0
 }
 
-export function clicks (options: ClicksOptions = {}): RecognizeableOptions<ClicksTypes, ClicksMetadata>['effects'] {
+export function createClicks (options: ClicksOptions = {}): RecognizeableOptions<ClicksTypes, ClicksMetadata>['effects'] {
   const { minClicks, maxInterval, maxDistance, getMousemoveTarget, onDown, onMove, onLeave, onUp } = { ...defaultOptions, ...options },
         cache: { mousemoveEffect?: (event: ListenEffectParam<'mousemove'>) => void } = {}
 

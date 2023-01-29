@@ -3,7 +3,10 @@
     "target": "esnext",
     "module": "esnext",
     "types": [
-      "node"
+      "node",
+    ],
+    "typeRoots": [
+      "./tests/@types"
     ],
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,

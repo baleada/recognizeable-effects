@@ -1,5 +1,5 @@
 import { find, some } from 'lazy-collections'
-import type { RecognizeableEffect } from "@baleada/logic"
+import { RecognizeableEffect, createMatchesKeycombo as createMatches } from "@baleada/logic"
 import { toHookApi, storeKeydownStartMetadata } from './extracted'
 import type { HookApi, KeydownStartMetadata } from './extracted'
 
@@ -27,11 +27,11 @@ const defaultOptions: KeypressOptions = {
   effectLimit: 1,
 }
 
-export function keypress (
+export function createKeypress (
   keycombo: string | string[],
   options: KeypressOptions = {}
 ) {
-  const ensuredKeycombos = Array.isArray(keycombo) ? keycombo : [keycombo],
+  const narrowedKeycombos = Array.isArray(keycombo) ? keycombo : [keycombo],
         { minDuration, effectLimit, onDown, onUp } = { ...defaultOptions, ...options },
         cache: {
           request?: number,
@@ -39,12 +39,12 @@ export function keypress (
         } = {}
 
   const keydown: RecognizeableEffect<'keydown', KeypressMetadata> = (event, api) => {
-    const { matches, denied } = api
+    const { denied } = api
 
     if (
-      !some<typeof ensuredKeycombos[0]>(
-        ensuredKeycombo => matches(ensuredKeycombo)
-      )(ensuredKeycombos)
+      !some<typeof narrowedKeycombos[0]>(
+        narrowedKeycombo => createMatches(narrowedKeycombo)(event)
+      )(narrowedKeycombos)
     ) {
       denied()
       onDown?.(toHookApi(api))
@@ -55,7 +55,9 @@ export function keypress (
           metadata = getMetadata()
 
     metadata.keyStatus = 'down'
-    metadata.keycombo = find(matches)(ensuredKeycombos) as string
+    metadata.keycombo = find<typeof narrowedKeycombos[0]>(
+      narrowedKeycombo => createMatches(narrowedKeycombo)(event)
+    )(narrowedKeycombos) as string
     if (!metadata.times) {
       storeKeydownStartMetadata(event, api)
       metadata.duration = 0

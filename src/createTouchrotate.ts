@@ -1,6 +1,6 @@
 import type { RecognizeableEffect, RecognizeableOptions } from '@baleada/logic'
-import { toHookApi, storePointerStartMetadata, storePointerMoveMetadata, toTouchMovePoint, toPolarCoordinates } from './extracted'
-import type { HookApi, PointerStartMetadata, PointerMoveMetadata, PolarCoordinates } from './extracted'
+import { toHookApi, toPolarCoordinates } from './extracted'
+import type { HookApi, PointerStartMetadata, PointerTimeMetadata, PolarCoordinates } from './extracted'
 
 /*
  * Rotate is defined as two touches that:
@@ -12,7 +12,7 @@ export type TouchrotateTypes = 'touchstart' | 'touchmove' | 'touchend' | 'touchc
 
 export type TouchrotateMetadata = {
   touches: [Touch, Touch],
-  times: PointerStartMetadata['times'],
+  times: PointerTimeMetadata['times'],
   rotation: PolarCoordinates['angle'],
   angle: {
     start: PolarCoordinates['angle'],
@@ -46,7 +46,7 @@ const defaultOptions: TouchrotateOptions = {
   minRotationUnit: 'degrees',
 }
 
-export function touchrotate (options: TouchrotateOptions = {}): RecognizeableOptions<TouchrotateTypes, TouchrotateMetadata>['effects'] {
+export function createTouchrotate (options: TouchrotateOptions = {}): RecognizeableOptions<TouchrotateTypes, TouchrotateMetadata>['effects'] {
   const { minRotation, minRotationUnit, onStart, onMove, onCancel, onEnd } = { ...defaultOptions, ...options },
         cache: { identifiers?: [number, number] } = {}
 

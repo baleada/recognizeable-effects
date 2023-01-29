@@ -1,85 +1,67 @@
-export { clicks } from './clicks'
+export { createClicks } from './createClicks'
 export type {
   ClicksTypes,
   ClicksMetadata,
   ClicksOptions,
   ClicksHook,
   ClicksHookApi
-} from './clicks'
+} from './createClicks'
 
-export { mousedrag } from './mousedrag'
-export type {
-  MousedragTypes,
-  MousedragMetadata,
-  MousedragOptions,
-  MousedragHook,
-  MousedragHookApi
-} from './mousedrag'
-
-export { mousedragdrop } from './mousedragdrop'
-export type {
-  MousedragdropTypes,
-  MousedragdropMetadata,
-  MousedragdropOptions,
-  MousedragdropHook,
-  MousedragdropHookApi
-} from './mousedragdrop'
-
-export { mousepress } from './mousepress'
+export { createMousepress } from './createMousepress'
 export type {
   MousepressTypes,
   MousepressMetadata,
   MousepressOptions,
   MousepressHook,
   MousepressHookApi
-} from './mousepress'
+} from './createMousepress'
+
+export { createMouserelease } from './createMouserelease'
+export type {
+  MousereleaseTypes,
+  MousereleaseMetadata,
+  MousereleaseOptions,
+  MousereleaseHook,
+  MousereleaseHookApi
+} from './createMouserelease'
 
 // TODO: Figure out proper touchTotal based denial on all touch stuff
 
-export { touches } from './touches'
+export { createTouches } from './createTouches'
 export type {
   TouchesTypes,
   TouchesMetadata,
   TouchesOptions,
   TouchesHook,
   TouchesHookApi
-} from './touches'
+} from './createTouches'
 
-export { touchdrag } from './touchdrag'
-export type {
-  TouchdragTypes,
-  TouchdragMetadata,
-  TouchdragOptions,
-  TouchdragHook,
-  TouchdragHookApi
-} from './touchdrag'
-
-export { touchdragdrop } from './touchdragdrop'
-export type {
-  TouchdragdropTypes,
-  TouchdragdropMetadata,
-  TouchdragdropOptions,
-  TouchdragdropHook,
-  TouchdragdropHookApi
-} from './touchdragdrop'
-
-export { touchpress } from './touchpress'
+export { createTouchpress } from './createTouchpress'
 export type {
   TouchpressTypes,
   TouchpressMetadata,
   TouchpressOptions,
   TouchpressHook,
   TouchpressHookApi
-} from './touchpress'
+} from './createTouchpress'
 
-export { touchrotate } from './touchrotate'
+export { createTouchrelease } from './createTouchrelease'
+export type {
+  TouchreleaseTypes,
+  TouchreleaseMetadata,
+  TouchreleaseOptions,
+  TouchreleaseHook,
+  TouchreleaseHookApi
+} from './createTouchrelease'
+
+export { createTouchrotate } from './createTouchrotate'
 export type {
   TouchrotateTypes,
   TouchrotateMetadata,
   TouchrotateOptions,
   TouchrotateHook,
   TouchrotateHookApi
-} from './touchrotate'
+} from './createTouchrotate'
 
 // export { touchpinch } from './pinch'
 // export type { TouchpinchOptions } from './pinch'
@@ -87,37 +69,29 @@ export type {
 // export { touchrotate } from './rotate'
 // export type { TouchrotateOptions } from './rotate'
 
-export { keychord } from './keychord'
+export { createKeychord } from './createKeychord'
 export type {
   KeychordTypes,
   KeychordMetadata,
   KeychordOptions,
   KeychordHook,
   KeychordHookApi
-} from './keychord'
+} from './createKeychord'
 
-export { keypress } from './keypress'
+export { createKeypress } from './createKeypress'
 export type {
   KeypressTypes,
   KeypressMetadata,
   KeypressOptions,
   KeypressHook,
   KeypressHookApi
-} from './keypress'
+} from './createKeypress'
 
-export { konami } from './konami'
+export { createKonami } from './createKonami'
 export type {
   KonamiTypes,
   KonamiMetadata,
   KonamiOptions,
   KonamiHook,
   KonamiHookApi
-} from './konami'
-
-// UTIL
-export type {
-  PolarCoordinates,
-  Direction,
-  PointerMoveMetadata,
-  PointerStartMetadata,
-} from './extracted'
+} from './createKonami'

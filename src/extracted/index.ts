@@ -19,3 +19,6 @@ export type { PointerStartMetadata } from './storePointerStartMetadata'
 
 export { storePointerMoveMetadata } from './storePointerMoveMetadata'
 export type { PointerMoveMetadata } from './storePointerMoveMetadata'
+
+export { storePointerTimeMetadata } from './storePointerTimeMetadata'
+export type { PointerTimeMetadata } from './storePointerTimeMetadata'

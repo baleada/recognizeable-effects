@@ -1,4 +1,5 @@
 import type { RecognizeableEffect } from "@baleada/logic"
+import { createMatchesKeycombo as createMatches } from "@baleada/logic"
 import { toHookApi } from './extracted'
 import type { HookApi } from './extracted'
 
@@ -28,8 +29,8 @@ const defaultOptions: KeychordOptions = {
   preventsDefaultUnlessDenied: true,
 }
 
-export function keychord (keycombos: string, options: KeychordOptions = {}) {
-  const ensuredKeycombos = keycombos.split(' '),
+export function createKeychord (keycombos: string, options: KeychordOptions = {}) {
+  const narrowedKeycombos = keycombos.split(' '),
         { maxInterval, preventsDefaultUnlessDenied, onDown } = { ...defaultOptions, ...options },
         cache: {
           currentKeycomboIndex: number,
@@ -54,10 +55,9 @@ export function keychord (keycombos: string, options: KeychordOptions = {}) {
 
     cache.lastTimeStamp = event.timeStamp
 
-    const keycombo = ensuredKeycombos[cache.currentKeycomboIndex],
-          { matches } = api
+    const keycombo = narrowedKeycombos[cache.currentKeycomboIndex]
 
-    if (!matches(keycombo)) {
+    if (!createMatches(keycombo)(event)) {
       denied()
       cleanup(event, api)
       onDown?.(toHookApi(api))
@@ -94,7 +94,7 @@ export function keychord (keycombos: string, options: KeychordOptions = {}) {
           metadata = getMetadata()
 
     // Wait for more keycombos if necessary.
-    if (metadata.keycombos.length < ensuredKeycombos.length) {
+    if (metadata.keycombos.length < narrowedKeycombos.length) {
       cache.currentKeycomboIndex += 1
       return
     }

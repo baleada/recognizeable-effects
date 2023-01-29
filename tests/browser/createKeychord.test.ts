@@ -1,7 +1,6 @@
 import { suite as createSuite } from 'uvu'
 import * as assert from 'uvu/assert'
 import { withPlaywright } from '@baleada/prepare'
-import { WithGlobals } from '../fixtures/types'
 import type {
   KeychordTypes,
   KeychordMetadata,
@@ -11,17 +10,17 @@ import type {
 } from '../../src'
 
 const suite = withPlaywright(
-  createSuite('keychord')
+  createSuite('createKeychord')
 )
 
 suite(`recognizes keychords`, async ({ playwright: { page, reloadNext } }) => {
   await page.evaluate(async () => {
-    const listenable = new (window as unknown as WithGlobals).Listenable<KeychordTypes, KeychordMetadata>(
+    const listenable = new window.Listenable<KeychordTypes, KeychordMetadata>(
       'recognizeable' as KeychordTypes,
-      { recognizeable: { effects: (window as unknown as WithGlobals).effects.keychord('p o o p') } }
+      { recognizeable: { effects: window.effects.createKeychord('p o o p') } }
     );
 
-    (window as unknown as WithGlobals).testState = { listenable: listenable.listen(() => {}) }
+    window.testState = { listenable: listenable.listen(() => {}) }
   })
 
   await page.keyboard.press('P')
@@ -29,7 +28,7 @@ suite(`recognizes keychords`, async ({ playwright: { page, reloadNext } }) => {
   await page.keyboard.press('O')
   await page.keyboard.press('P')
   
-  const value = await page.evaluate(() => (window as unknown as WithGlobals).testState.listenable.recognizeable.status),
+  const value = await page.evaluate(() => window.testState.listenable.recognizeable.status),
         expected = 'recognized'
 
   assert.is(value, expected)
@@ -39,12 +38,12 @@ suite(`recognizes keychords`, async ({ playwright: { page, reloadNext } }) => {
 
 suite(`starts over from beginning after max interval is exceeded`, async ({ playwright: { page, reloadNext } }) => {
   await page.evaluate(async () => {
-    const listenable = new (window as unknown as WithGlobals).Listenable<KeychordTypes, KeychordMetadata>(
+    const listenable = new window.Listenable<KeychordTypes, KeychordMetadata>(
       'recognizeable' as KeychordTypes,
-      { recognizeable: { effects: (window as unknown as WithGlobals).effects.keychord('p o o p', { maxInterval: 100 }) } }
+      { recognizeable: { effects: window.effects.createKeychord('p o o p', { maxInterval: 100 }) } }
     );
 
-    (window as unknown as WithGlobals).testState = { listenable: listenable.listen(() => {}) }
+    window.testState = { listenable: listenable.listen(() => {}) }
   })
 
   await page.keyboard.press('P')
@@ -53,7 +52,7 @@ suite(`starts over from beginning after max interval is exceeded`, async ({ play
   await page.waitForTimeout(500)
   await page.keyboard.press('P')
   
-  const value = await page.evaluate(() => (window as unknown as WithGlobals).testState.listenable.recognizeable.status),
+  const value = await page.evaluate(() => window.testState.listenable.recognizeable.status),
         expected = 'recognizing'
 
   assert.is(value, expected)

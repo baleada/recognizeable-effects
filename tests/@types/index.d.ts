@@ -1,10 +1,13 @@
 import * as effects from '../../src'
-import { Listenable, Recognizeable, Dispatchable } from '@baleada/logic'
+import { Listenable, Recognizeable } from '@baleada/logic'
 
-export type WithGlobals = Window & {
+type Globals = {
   Listenable: typeof Listenable,
   Recognizeable: typeof Recognizeable,
-  Dispatchable: typeof Dispatchable,
   effects: typeof effects,
   testState: any,
+}
+
+declare global {
+  interface Window extends Globals {}
 }

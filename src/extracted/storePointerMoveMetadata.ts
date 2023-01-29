@@ -6,6 +6,7 @@ import { toPolarCoordinates } from './toPolarCoordinates'
 import type { PolarCoordinates } from './toPolarCoordinates'
 import type { PointerStartMetadata } from './storePointerStartMetadata'
 import { toCloned } from './toCloned'
+import type { PointerTimeMetadata } from './storePointerTimeMetadata'
 
 export type PointerMoveMetadata = {
   distance: {
@@ -26,7 +27,6 @@ export type PointerMoveMetadata = {
     fromPrevious: PolarCoordinates['angle'],
     fromStart: PolarCoordinates['angle']
   },
-  velocity: number,
   direction: {
     fromPrevious: Direction,
     fromStart: Direction,
@@ -52,14 +52,24 @@ const initialMetadata: PointerMoveMetadata = {
     fromPrevious: { radians: 0, degrees: 0 },
     fromStart: { radians: 0, degrees: 0 }
   },
-  velocity: 0,
   direction: {
     fromPrevious: 'up',
     fromStart: 'up',
   }
 }
 
-export function storePointerMoveMetadata<Type extends 'mousemove' | 'mouseup' | 'touchmove' | 'touchend', Metadata extends PointerMoveMetadata & PointerStartMetadata> (event: MouseEvent | TouchEvent, api: Parameters<RecognizeableEffect<Type, Metadata>>[1]): void {
+export function storePointerMoveMetadata<
+  Type extends 'mousedown'
+    | 'mousemove'
+    | 'mouseup'
+    | 'touchstart'
+    | 'touchmove'
+    | 'touchend',
+  Metadata extends PointerMoveMetadata & PointerStartMetadata & PointerTimeMetadata
+> (
+  event: MouseEvent | TouchEvent,
+  api: Parameters<RecognizeableEffect<Type, Metadata>>[1]
+): void {
   const { getMetadata } = api,
         metadata = getMetadata()
 
@@ -108,14 +118,6 @@ export function storePointerMoveMetadata<Type extends 'mousemove' | 'mouseup' | 
   metadata.distance.vertical.fromStart = newY - startY
   metadata.angle.fromStart = angleFromStart
   metadata.direction.fromStart = toDirection(angleFromStart.degrees)
-  
-  const previousEndTime = metadata.times.end,
-        newEndTime = event.timeStamp,
-        newEndPoint = { x: newX, y: newY },
-        velocity = distanceFromPrevious / (newEndTime - previousEndTime)
-
-  metadata.points.end = newEndPoint
-  metadata.times.end = newEndTime
-  metadata.velocity = velocity
+  metadata.points.end = { x: newX, y: newY }
 }
 

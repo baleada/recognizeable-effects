@@ -1,7 +1,6 @@
 import { suite as createSuite } from 'uvu'
 import * as assert from 'uvu/assert'
 import { withPlaywright } from '@baleada/prepare'
-import { WithGlobals } from '../fixtures/types'
 import type {
   KonamiTypes,
   KonamiMetadata,
@@ -11,17 +10,17 @@ import type {
 } from '../../src'
 
 const suite = withPlaywright(
-  createSuite('konami')
+  createSuite('createKonami')
 )
 
 suite(`recognizes Konami code`, async ({ playwright: { page, reloadNext } }) => {
   await page.evaluate(async () => {
-    const listenable = new (window as unknown as WithGlobals).Listenable<KonamiTypes, KonamiMetadata>(
+    const listenable = new window.Listenable<KonamiTypes, KonamiMetadata>(
       'recognizeable' as KonamiTypes, 
-      { recognizeable: { effects: (window as unknown as WithGlobals).effects.konami() } }
+      { recognizeable: { effects: window.effects.createKonami() } }
     );
 
-    (window as unknown as WithGlobals).testState = { listenable: listenable.listen(() => {}) }
+    window.testState = { listenable: listenable.listen(() => {}) }
   })
 
   await page.keyboard.press('ArrowUp')
@@ -36,7 +35,7 @@ suite(`recognizes Konami code`, async ({ playwright: { page, reloadNext } }) => 
   await page.keyboard.press('A')
   await page.keyboard.press('Enter')
   
-  const value = await page.evaluate(() => (window as unknown as WithGlobals).testState.listenable.recognizeable.status),
+  const value = await page.evaluate(() => window.testState.listenable.recognizeable.status),
         expected = 'recognized'
 
   assert.is(value, expected)

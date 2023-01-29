@@ -1,5 +1,5 @@
 import { toHookApi, toCloned, toTouchMovePoint, toPolarCoordinates } from './extracted'
-import type { HookApi, PointerStartMetadata } from './extracted'
+import type { HookApi, PointerStartMetadata, PointerTimeMetadata } from './extracted'
 import type { RecognizeableEffect, RecognizeableOptions } from '@baleada/logic'
 
 /*
@@ -20,7 +20,7 @@ export type TouchesMetadata = {
 }
 
 type Touch = {
-  times: PointerStartMetadata['times'],
+  times: PointerTimeMetadata['times'],
   points: PointerStartMetadata['points'], 
   distance: number,
   interval: number
@@ -59,7 +59,7 @@ const initialTouch: Touch = {
   interval: 0
 }
 
-export function touches (options: TouchesOptions = {}): RecognizeableOptions<TouchesTypes, TouchesMetadata>['effects'] {
+export function createTouches (options: TouchesOptions = {}): RecognizeableOptions<TouchesTypes, TouchesMetadata>['effects'] {
   const { minTouches, maxInterval, maxDistance, onStart, onMove, onCancel, onEnd } = { ...defaultOptions, ...options }
 
   const touchstart: RecognizeableEffect<'touchstart', TouchesMetadata> = (event, api) => {
